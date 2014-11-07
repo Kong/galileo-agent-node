@@ -8,13 +8,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:mashape/mashape-analytics"
+    "url": "git@github.com:mashape/analytics-agents"
   },
-  "license": "ISC",
+  "license": "proprietary",
   "bugs": {
-    "url": "https://github.com/mashape/mashape-analytics/issues"
+    "url": "https://github.com/mashape/analytics-agents/issues"
   },
-  "homepage": "https://github.com/mashape/mashape-analytics",
+  "homepage": "https://github.com/mashape/analytics-agents",
   "devDependencies": {
     "express": "^4.10.1",
     "mocha": "^2.0.1",
