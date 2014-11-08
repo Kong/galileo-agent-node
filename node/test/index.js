@@ -3,7 +3,7 @@ var express = require('express');
 var http = require('http');
 var io = require('socket.io');
 var request = require('supertest');
-var agent = require('../index');
+var agent = require('../lib');
 var package = require('../package.json');
 
 var createSocketServer = function(port, socketHandler) {

@@ -1,7 +1,7 @@
 /**
  * Convert Express request and responses to HAR
  */
- var package = require('./package.json');
+ var package = require('../package.json');
 
 // Helper function
 var mapToNameValueMapArray = function(obj) {

@@ -2,7 +2,7 @@
   "name": "mashape-analytics-agent",
   "version": "0.0.0",
   "description": "Node Agent for API Analytics.",
-  "main": "index.js",
+  "main": "./lib/index.js",
   "scripts": {
     "test": "mocha -R spec"
   },
