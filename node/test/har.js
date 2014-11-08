@@ -1,31 +1,60 @@
+var express = require('express');
+var request = require('supertest');
 var har = require('../lib/har');
+var package = require('../package.json');
+
+var http = require('http');
 
 describe('HAR', function() {
-  it.skip('should convert express 4 req, res to HAR', function() {
+  it('should convert http server req, res to HAR', function(done) {
     var now = new Date();
-    //var event = har(req, res, now);
+    var server = http.createServer(function(req, res) {
+      var event = har(req, res, now);
 
-    // TODO validate HAR
-    // event.should.have.property('version').and.equal(1.2); // HAR 1.2
-    // event.should.have.property('creator')
-    // event.creator.should.have.property('name').and.equal(package.name);
-    // event.creator.should.have.property('version').and.equal(package.version);
+      event.should.have.property('version').and.equal(1.2); // HAR 1.2
+      event.creator.should.have.property('name').and.equal(package.name);
+      event.creator.should.have.property('version').and.equal(package.version);
 
-    // event.should.have.property('request');
-    // event.request.should.have.property('receivedAt').and.be.a.Number;
-    // event.request.should.have.property('method').and.equal('GET');
-    // event.request.should.have.a.property('protocol').and.equal('http');
-    // event.request.should.have.a.property('path').and.equal('/');
-    // event.request.should.have.property('queries');
-    // event.request.should.have.property('headers');
-    // event.request.headers.should.have.a.property('host').and.match(/127.0.0.1/);
+      event.should.have.property('entries').and.be.an.Array;
+      event.entries.length.should.equal(1);
+      event.entries[0].should.have.property('startedDateTime').and.be.a.String;
+      event.entries[0].should.have.property('request');
+      event.entries[0].request.should.have.property('method').and.equal('GET');
+      event.entries[0].request.should.have.property('httpVersion').and.equal('HTTP/1.1');
+      event.entries[0].should.have.property('response');
+      event.entries[0].response.should.have.property('status').and.equal(200);
+      event.entries[0].request.should.have.property('httpVersion').and.equal('HTTP/1.1');
+      event.entries[0].should.have.property('cache');
+      event.entries[0].should.have.property('timings');
 
-    // event.should.have.property('response');
-    // event.response.should.have.property('receivedAt').and.be.a.Number;
-    // event.response.should.have.property('status').and.equal(200);
+      done();
+    });
 
-    // event.response.should.have.property('headers');
-    // event.response.headers.should.have.property('content-type').and.match(/html/);
+    request(server)
+      .get('/?test=1&test=2')
+      .set('host', 'rawr.com')
+      .end(function() {});
+  });
+  it('should convert express req, res to HAR', function(done) {
+    var now = new Date();
+    var app = express();
 
+    app.get('/', function(req, res) {
+      // console.log(req);
+      res.on('finish', function() {
+        var event = har(req, res, now);
+
+        event.should.have.property('version').and.equal(1.2); // HAR 1.2
+        event.should.have.property('creator');
+        event.should.have.property('entries').and.be.an.Array;
+
+        done();
+      })
+      res.send('Bonjour');
+    });
+
+    request(app)
+      .get('/?test=1&test=2')
+      .end(function() {});
   });
 })

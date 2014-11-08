@@ -23,7 +23,7 @@ var createSocketServer = function(port, socketHandler) {
 };
 
 describe('Agent middleware', function() {
-  it('should record an event send in HAR', function(done) {
+  it('should record an event send', function(done) {
     var port = 4001;
     var mockServer = createSocketServer(port, function(event) {
       event.should.be.ok;
