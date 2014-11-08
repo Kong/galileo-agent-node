@@ -10,38 +10,42 @@ var createSocketServer = function(port, socketHandler) {
   var server = http.createServer();
   var sio = io(server);
 
-  sio.on('connection', function(socket) {
-
-    socket.on('record', function(event) {
-      socketHandler(event);
-
-      server.close();
-    });
-  });
+  sio.on('connection', socketHandler.bind(server));
   server.listen(port);
   return server;
 };
 
 describe('Agent middleware', function() {
-  it('should record an event send', function(done) {
+  it('should emit record with an event', function(done) {
     var port = 4001;
-    var mockServer = createSocketServer(port, function(event) {
-      event.should.be.ok;
-      done();
+
+    // Start a mock analytics server
+    var mockServer = createSocketServer(port, function(socket) {
+      var server = this;
+
+      socket.on('record', function(event) {
+        event.should.be.ok;
+
+        server.close();
+        done();
+      });
     });
 
     // Create HTTP server for api call
     var app = express();
 
+    // Attach agent
     app.use(agent('fake-key', {host: 'localhost', port: port}));
 
+    // Setup a route
     app.get('/', function(req, res) {
       res.send('Bonjour');
     });
 
+    // Start the server
     app.listen(function() {
 
-      // Invoke an API call
+      // Call the route
       request(app)
         .get('/')
         .expect('Bonjour')
