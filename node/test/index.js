@@ -1,42 +1,54 @@
 require('should');
 var express = require('express');
-var net = require('net');
+var http = require('http');
+var io = require('socket.io');
 var request = require('supertest');
 var agent = require('../index');
 var package = require('../package.json');
 
-describe('Agent middleware', function() {
-  it('should record a request', function(done) {
-    var port = 4001;
-    var mockServer = net.createServer(function(socket) {
-      socket.write('server/1.0'); // Mimick server
-      socket.on('data', function(req) {
-        data = JSON.parse(req.toString('utf-8'));
+var createServer = function(port, handler) {
+  var server = http.createServer();
+  var sio = io(server);
 
-        data.agent.should.equal(package.name + '/' + package.version);
+  sio.on('connection', function(socket) {
 
-        data.should.have.property('request');
-        data.request.should.have.property('receivedAt').and.be.a.Number;
-        data.request.should.have.property('method').and.equal('GET');
-        data.request.should.have.a.property('protocol').and.equal('http');
-        data.request.should.have.a.property('path').and.equal('/');
-        data.request.should.have.property('queries');
-        data.request.should.have.property('headers');
-        data.request.headers.should.have.a.property('host').and.match(/127.0.0.1/);
+    socket.on('record', function(event) {
+      handler(event);
 
-        data.should.have.property('response');
-        data.response.should.have.property('receivedAt').and.be.a.Number;
-        data.response.should.have.property('status').and.equal(200);
-
-        data.response.should.have.property('headers');
-        data.response.headers.should.have.property('content-type').and.match(/html/);
-
-        //console.log(data);
-        mockServer.close();
-        done();
-      });
+      server.close();
+      done();
     });
-    mockServer.listen(port);
+  });
+  server.listen(port);
+  return server;
+};
+
+describe('Agent middleware', function() {
+  it('should record an event send in HAR', function(done) {
+    var port = 4001;
+    var mockServer = createServer(port, function(event) {
+      // TODO validate HAR
+      // event.should.have.property('version').and.equal(1.2); // HAR 1.2
+      // event.should.have.property('creator')
+      // event.creator.should.have.property('name').and.equal(package.name);
+      // event.creator.should.have.property('version').and.equal(package.version);
+
+      // event.should.have.property('request');
+      // event.request.should.have.property('receivedAt').and.be.a.Number;
+      // event.request.should.have.property('method').and.equal('GET');
+      // event.request.should.have.a.property('protocol').and.equal('http');
+      // event.request.should.have.a.property('path').and.equal('/');
+      // event.request.should.have.property('queries');
+      // event.request.should.have.property('headers');
+      // event.request.headers.should.have.a.property('host').and.match(/127.0.0.1/);
+
+      // event.should.have.property('response');
+      // event.response.should.have.property('receivedAt').and.be.a.Number;
+      // event.response.should.have.property('status').and.equal(200);
+
+      // event.response.should.have.property('headers');
+      // event.response.headers.should.have.property('content-type').and.match(/html/);
+    });
     var app = express();
 
     app.use(agent('fake-key', {host: 'localhost', port: port}));
