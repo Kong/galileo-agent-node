@@ -6,14 +6,14 @@ var request = require('supertest');
 var agent = require('../index');
 var package = require('../package.json');
 
-var createServer = function(port, handler) {
+var createSocketServer = function(port, socketHandler) {
   var server = http.createServer();
   var sio = io(server);
 
   sio.on('connection', function(socket) {
 
     socket.on('record', function(event) {
-      handler(event);
+      socketHandler(event);
 
       server.close();
       done();
@@ -26,7 +26,7 @@ var createServer = function(port, handler) {
 describe('Agent middleware', function() {
   it('should record an event send in HAR', function(done) {
     var port = 4001;
-    var mockServer = createServer(port, function(event) {
+    var mockServer = createSocketServer(port, function(event) {
       // TODO validate HAR
       // event.should.have.property('version').and.equal(1.2); // HAR 1.2
       // event.should.have.property('creator')
@@ -49,6 +49,8 @@ describe('Agent middleware', function() {
       // event.response.should.have.property('headers');
       // event.response.headers.should.have.property('content-type').and.match(/html/);
     });
+
+    // Create HTTP server for api call
     var app = express();
 
     app.use(agent('fake-key', {host: 'localhost', port: port}));
@@ -58,10 +60,13 @@ describe('Agent middleware', function() {
     });
 
     app.listen(function() {
+
+      // Invoke an API call
       request(app)
         .get('/')
         .expect('Bonjour')
         .end(function() {});
     });
+
   });
 });
