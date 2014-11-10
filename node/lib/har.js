@@ -56,6 +56,7 @@ module.exports = function(req, res, reqReceived) {
           method: req.method,
           url: req.url, // TODO construct full URL
           httpVersion: 'HTTP/' + req.httpVersion,
+          queryString: reqQuery,
           headers: reqHeaders,
           headersSize: -1, // TODO
           bodySize: -1  // TODO
@@ -65,7 +66,6 @@ module.exports = function(req, res, reqReceived) {
           statusText: '', // TODO get status text
           httpVersion: 'HTTP/1.1',
           headers: resHeaders,
-          queryString: reqQuery,
           content: {
             size: -1, // TODO get response header & body size
             // compression
