@@ -10,5 +10,10 @@
   "quotmark": "single",
   "strict": false,
   "undef": true,
-  "unused": "vars"
+  "unused": "vars",
+  "predef": [
+    "describe",
+    "it",
+    "log"
+  ]
 }

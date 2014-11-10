@@ -1,10 +1,9 @@
-require('should');
 var express = require('express');
 var http = require('http');
 var sio = require('socket.io');
 var request = require('supertest');
 var agent = require('../lib');
-var package = require('../package.json');
+require('should');
 
 /**
  * Helper function
@@ -87,5 +86,5 @@ describe('Agent', function() {
         .expect('This is a test')
         .end(function() {});
     });
-  })
+  });
 });

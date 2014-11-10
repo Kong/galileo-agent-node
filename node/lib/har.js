@@ -11,12 +11,14 @@ var mapToNameValueMapArray = function(obj) {
   var results = [];
   var names = Object.keys(obj);
 
-  for(var i = names; i--;) {
+  for(var i = names.length; i--;) {
     results.push({
       name: names[i],
       value: obj[names[i]]
     });
   }
+
+  return results;
 };
 
 // Parse url for a query object.
@@ -27,7 +29,7 @@ var parseUrlForQuery = function(parseUrl) {
   } else {
     return {};
   }
-}
+};
 
 /**
  * Convert http request and responses to HAR
@@ -54,7 +56,7 @@ module.exports = function(req, res, reqReceived) {
         startedDateTime: new Date().toISOString(),
         request: {
           method: req.method,
-          url: req.url, // TODO construct full URL
+          url: 'http://' + req.headers.host + req.url, // TODO construct full URL
           httpVersion: 'HTTP/' + req.httpVersion,
           queryString: reqQuery,
           headers: reqHeaders,
@@ -69,11 +71,11 @@ module.exports = function(req, res, reqReceived) {
           content: {
             size: -1, // TODO get response header & body size
             // compression
-            mimeType: res._headers ? res._headers['content-type'] : '',
+            mimeType: res._headers ? res._headers['content-type'] : 'text/plain',
             // text
             // encoding
           },
-          redirectUrl: res._headers ? res._headers['location'] : '',
+          redirectUrl: res._headers ? res._headers.location : '',
           headersSize: -1,
           bodySize: -1
         },

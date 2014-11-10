@@ -1,9 +1,10 @@
 var express = require('express');
 var request = require('supertest');
+var http = require('http');
 var har = require('../lib/har');
 var package = require('../package.json');
+require('should');
 
-var http = require('http');
 
 describe('HAR', function() {
   it('should convert http server req, res to HAR', function(done) {
@@ -49,7 +50,7 @@ describe('HAR', function() {
         event.should.have.property('entries').and.be.an.Array;
 
         done();
-      })
+      });
       res.send('Bonjour');
     });
 
@@ -57,4 +58,4 @@ describe('HAR', function() {
       .get('/?test=1&test=2')
       .end(function() {});
   });
-})
+});

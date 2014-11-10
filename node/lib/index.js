@@ -2,7 +2,7 @@ var async   = require('async');
 var har     = require('./har');
 var io      = require('socket.io-client');
 
-var Agent = module.exports = function Agent (agentKey, options) {
+module.exports = function Agent (agentKey, options) {
   if (!(this instanceof Agent)) return new Agent(agentKey, options);
 
   // Initial setup
