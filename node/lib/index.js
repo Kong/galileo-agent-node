@@ -9,9 +9,9 @@ var Agent = module.exports = function Agent (agentKey, options) {
   var self = this;
   this.connected = false;
   this.agentKey = agentKey;
-  this.eventQueue = async.queue(function (req, done) {
+  this.eventQueue = async.queue(function (event, done) {
     // TODO use msgpack + gzip?
-    self.client.emit('record', JSON.stringify(req));
+    self.client.emit('record', event);
     done();
   }); // TODO specify worker pool
   this.eventQueue.pause();
@@ -33,10 +33,10 @@ var Agent = module.exports = function Agent (agentKey, options) {
 
   // API Recorder Middleware
   return function (req, res, next) {
-    var reqReceived = new Date().getTime();
+    var reqReceived = new Date();
 
     res.on('finish', function () {
-      var model = har(req, res, new Date());
+      var model = har(req, res, reqReceived);
 
       self.eventQueue.push(model);
     });

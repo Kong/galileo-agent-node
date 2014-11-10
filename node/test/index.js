@@ -1,41 +1,47 @@
 require('should');
 var express = require('express');
 var http = require('http');
-var io = require('socket.io');
+var sio = require('socket.io');
 var request = require('supertest');
 var agent = require('../lib');
 var package = require('../package.json');
 
-var createSocketServer = function(port, socketHandler) {
-  var server = http.createServer();
-  var sio = io(server);
+/**
+ * Helper function
+ */
+// Creates a mock of the analytics server.
+// Returns: Server address
+var createAnalyticsServer = function(socketHandler) {
+  var server = http.Server();
+  var io = sio(server);
 
-  sio.on('connection', socketHandler.bind(server));
-  server.listen(port);
-  return server;
+  io.on('connection', socketHandler.bind(server));
+
+  var addr = server.address();
+  if (!addr) {
+    addr = server.listen().address();
+  }
+
+  return addr;
 };
 
-describe('Agent middleware', function() {
-  it('should emit record with an event', function(done) {
-    var port = 4001;
+describe('Agent', function() {
 
-    // Start a mock analytics server
-    var mockServer = createSocketServer(port, function(socket) {
-      var server = this;
-
+  it('should record event with an Express server', function(done) {
+    var analyticsAddr = createAnalyticsServer(function(socket) {
       socket.on('record', function(event) {
         event.should.be.ok;
+        event.should.have.property('version');
 
-        server.close();
         done();
       });
     });
 
-    // Create HTTP server for api call
+    // Create Express server for api call
     var app = express();
 
     // Attach agent
-    app.use(agent('fake-key', {host: 'localhost', port: port}));
+    app.use(agent('fake-key', {host: analyticsAddr.address, port: analyticsAddr.port}));
 
     // Setup a route
     app.get('/', function(req, res) {
@@ -53,4 +59,33 @@ describe('Agent middleware', function() {
     });
 
   });
+
+  it('should record event with an HTTP server', function(done) {
+    var analyticsAddr = createAnalyticsServer(function(socket) {
+      socket.on('record', function(event) {
+        event.should.be.ok;
+        event.should.have.property('version');
+
+        done();
+      });
+    });
+
+    // Create server and attach agent
+    var analytics = agent('fake-key', {host: analyticsAddr.address, port: analyticsAddr.port});
+    var server = http.createServer(function(req, res) {
+      analytics(req, res);
+
+      res.writeHead(200, { 'Content-Type': 'text/plain'});
+      res.write('This is a test');
+      res.end();
+    });
+    server.listen(function() {
+      // Call the route
+      request(server)
+        .get('/')
+        .expect(200)
+        .expect('This is a test')
+        .end(function() {});
+    });
+  })
 });
