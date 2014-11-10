@@ -1,11 +1,12 @@
-/**
- * Convert Express request and responses to HAR
- */
 var url = require('url');
 var qs = require('qs');
 var package = require('../package.json');
 
-// Helper function
+/**
+ * Helper functions for HAR
+ */
+
+// Transform objects into an array of key value pairs.
 var mapToNameValueMapArray = function(obj) {
   var results = [];
   var names = Object.keys(obj);
@@ -18,6 +19,7 @@ var mapToNameValueMapArray = function(obj) {
   }
 };
 
+// Parse url for a query object.
 var parseUrlForQuery = function(parseUrl) {
   var queryString = url.parse(parseUrl).query;
   if (queryString) {
@@ -27,7 +29,9 @@ var parseUrlForQuery = function(parseUrl) {
   }
 }
 
-// HAR Conversion method
+/**
+ * Convert http request and responses to HAR
+ */
 module.exports = function(req, res, reqReceived) {
   var reqHeaders = mapToNameValueMapArray(req.headers);
   var reqQuery = mapToNameValueMapArray(parseUrlForQuery(req.url));

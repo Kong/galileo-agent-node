@@ -1,4 +1,4 @@
-Mashape Analytics Agent (NodeJS, Express 4)
+Mashape Analytics Agent (node.js)
 -------------------------------------------
 
 Middleware agent to report requests to a mashape analytics server.
@@ -10,20 +10,15 @@ Install
 npm install mashape-analytics-agent
 ```
 
-Usage
------
+Usage with Express
+------------------
 
 ```javascript
 var analytics = require('mashape-analytics-agent');
 var app = require('express')();
 
-// Middleware to report
+// Middleware to report all calls
 app.use(analytics('MASHAPE-ANALYTICS-KEY'));
-
-// Use as normal
-app.get('/', function(req, res) {
-  
-});
 ```
 
 If you have a specific API endpoint:
@@ -31,4 +26,16 @@ If you have a specific API endpoint:
 app.use('/api', analytics('MASHAPE-ANALYTICS-KEY'));
 ```
 
+Usage with Restify
+------------------
 
+```javascript
+var analytics = require('mashape-analytics-agent');
+var server = require('restify').createServer({
+  name: 'myapp',
+  version: '1.0.0'
+});
+
+// Middleware to report all calls
+server.use(analytics('MASHAPE-ANALYTICS-KEY'));
+```
