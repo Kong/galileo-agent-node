@@ -39,3 +39,19 @@ var server = require('restify').createServer({
 // Middleware to report all calls
 server.use(analytics('MASHAPE-ANALYTICS-KEY'));
 ```
+
+Usage with HTTP Server
+----------------------
+
+``` javascript
+var analytics = require('mashape-analytics-agent')('MASHAPE-ANALYTICS-KEY');
+var server = require('http').createServer(function (req, res) {
+    
+    analytics(req, res);
+
+    // Other logic here...
+    
+});
+```
+
+It may be easier to use

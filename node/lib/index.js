@@ -41,6 +41,8 @@ var Agent = module.exports = function Agent (agentKey, options) {
       self.eventQueue.push(model);
     });
 
-    next();
+    if (next) {
+      next();
+    }
   };
 };
