@@ -17,8 +17,8 @@ module.exports = function Agent (agentKey, options) {
   this.eventQueue.pause();
 
   this.options = options || {};
-  this.options.host = this.options.host || 'localhost';
-  this.options.port = this.options.port || 4000;
+  this.options.host = this.options.host || 'mashgalileo.herokuapp.com';
+  this.options.port = this.options.port || 80;
 
   if (!this.agentKey) {
     throw new Error('Analytics requires an API-KEY');
