@@ -42,6 +42,8 @@ module.exports = function(req, res, reqReceived) {
   var reqReceivedTime = reqReceived.getTime();
   var waitTime = new Date().getTime() - reqReceivedTime;
 
+  var protocol = req.connection.encrypted ? 'https' : 'http';
+
   return {
     version: 1.2,
     creator: {
@@ -56,7 +58,7 @@ module.exports = function(req, res, reqReceived) {
         startedDateTime: new Date().toISOString(),
         request: {
           method: req.method,
-          url: 'http://' + req.headers.host + req.url, // TODO construct full URL
+          url: protocol + '://' + req.headers.host + req.url, // TODO construct full URL
           httpVersion: 'HTTP/' + req.httpVersion,
           queryString: reqQuery,
           headers: reqHeaders,
