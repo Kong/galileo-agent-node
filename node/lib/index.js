@@ -37,6 +37,7 @@ module.exports = function Agent (agentKey, options) {
 
     res.on('finish', function () {
       var model = har(req, res, reqReceived);
+      model.agentKey = agentKey;
 
       self.eventQueue.push(model);
     });
