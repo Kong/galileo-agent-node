@@ -3,26 +3,39 @@ var har     = require('./har');
 var io      = require('socket.io-client');
 
 module.exports = function Agent (agentKey, options) {
-  if (!(this instanceof Agent)) return new Agent(agentKey, options);
-
-  // Initial setup
   var self = this;
+
+  // Ensure instance type
+  if (!(this instanceof Agent)) {
+    return new Agent(agentKey, options);
+  }
+
+  // Ensure agent key exists
+  if (!agentKey) {
+    throw new Error(
+      'Mashape Analytics requires an API-KEY, to obtain a key visit: http://apianalytics.com'
+    );
+  }
+
+  // Setup
+  this.options = options || {};
   this.connected = false;
   this.agentKey = agentKey;
-  this.eventQueue = async.queue(function (event, done) {
-    // TODO use msgpack + gzip?
-    self.client.emit('record', event);
-    done();
-  }); // TODO specify worker pool
-  this.eventQueue.pause();
 
-  this.options = options || {};
+  // Setup options
   this.options.host = this.options.host || 'mashgalileo.herokuapp.com';
   this.options.port = this.options.port || 80;
 
-  if (!this.agentKey) {
-    throw new Error('Analytics requires an API-KEY');
-  }
+  // Setup event queue
+  // TODO specify worker pool
+  // TODO use msgpack + gzip?
+  this.eventQueue = async.queue(function (event, done) {
+    self.client.emit('record', event);
+    done();
+  });
+
+  // Pause event queue until connected to Analytics server
+  this.eventQueue.pause();
 
   // Connect to Analytics server
   this.client = io('ws://' + self.options.host + ':' + self.options.port);
@@ -32,17 +45,18 @@ module.exports = function Agent (agentKey, options) {
   });
 
   // API Recorder Middleware
+  // TODO use tamper or tamper-esque method to get raw body
+  //      to determine raw content size to get infer compression size
   return function (req, res, next) {
     var reqReceived = new Date();
 
     res.on('finish', function () {
       var model = har(req, res, reqReceived);
       model.agentKey = agentKey;
-
       self.eventQueue.push(model);
     });
 
-    if (next) {
+    if (typeof next === 'function') {
       next();
     }
   };
