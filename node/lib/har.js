@@ -26,6 +26,60 @@ function getServerAddress () {
   return '';
 }
 
+function parseResponseHeaderString (string) {
+  if (string === '' || string.indexOf('\r\n') === -1) {
+    return false;
+  }
+
+  var output = {};
+  var lines = string.split('\r\n');
+  var status = lines.shift();
+
+  function parseStatusLine (line) {
+    var pieces = line.split(' ');
+    var versionNumberPieces;
+    var versionPieces;
+
+    // Header string pieces
+    output.version = pieces.shift();
+    output.status = pieces.shift();
+    output.responseStatusText = pieces.join(' ');
+
+    // Version major / minor
+    versionPieces = output.version.split('/');
+    output.httpVersion = versionPieces[1];
+    versionNumberPieces = output.httpVersion.split('.');
+    output.versionMajor = versionNumberPieces[0];
+    output.versionMinor = versionNumberPieces[1];
+  }
+
+  function parseHeaderLine (line) {
+    var pieces = line.split(': ');
+    var name = pieces.shift();
+    var value = pieces.join(': ');
+
+    output._headers[name.toLowerCase()] = value;
+    output.headers[name] = value;
+  }
+
+  // Prepare header object
+  output.headers = {};
+  output._headers = {};
+
+  // Remove empty strings
+  lines = lines.filter(Boolean);
+
+  // Parse status line
+  parseStatusLine(status);
+
+  // Parse headers
+  for (var i = lines.length; i--;) {
+    parseHeaderLine(lines[i]);
+  }
+
+  return output;
+}
+
 function setCharAt (str, index, chr) {
   return (index > str.length - 1) ? str : str.substr(0, index) + chr + str.substr(index + 1);
 }
@@ -47,16 +101,6 @@ function createHeaderStringFromReqObject (req) {
 
   for (var key in req.headers) {
     headers += normalizeHeaderName(key) + ': ' + req.headers[key] + '\r\n';
-  }
-
-  return headers + '\r\n';
-}
-
-function createHeaderStringFromResObject (res) {
-  var headers = util.format('%s %s HTTP/%d.%d\r\n', res.method, res.url, res.versionMajor, res.versionMinor);
-
-  for (var key in res._headers) {
-    headers += normalizeHeaderName(key) + ': ' + res._headers[key] + '\r\n';
   }
 
   return headers + '\r\n';
@@ -94,18 +138,24 @@ function getQueryObjectFromUrl (parseUrl) {
  * Convert http request and responses to HAR
  */
 module.exports = function convertRequestToHar (req, res, reqReceived) {
+  var resHeadersObject = parseResponseHeaderString(res._header);
   var agentResStartTime = new Date();
   var reqHeaders = objectToArray(req.headers);
   var reqHeaderBuffer = new Buffer(createHeaderStringFromReqObject(req));
   var reqQuery = objectToArray(getQueryObjectFromUrl(req.url));
   var reqReceivedTime = reqReceived.getTime();
-  var reqBodySize = req.headers['content-length'] ? parseFloat(req.headers['content-length']) : -1;
-  var resHeaders = objectToArray(res._headers || {});
-  var resHeaderBuffer = new Buffer(res._header || createHeaderStringFromResObject(res));
-  var resBodySize = res._headers['content-length'] ? parseFloat(res._headers['content-length']) : -1;
+  var reqBodySize = req.headers['content-length']
+    ? parseFloat(req.headers['content-length'])
+    : -1;
+  var resHeaders = objectToArray(resHeadersObject.headers || {});
+  var resHeaderBuffer = res._header
+    ? new Buffer(res._header)
+    : -1;
+  var resBodySize = resHeadersObject && resHeadersObject._headers['content-length']
+    ? parseFloat(resHeadersObject._headers['content-length'])
+    : -1;
   var waitTime = agentResStartTime.getTime() - reqReceivedTime;
   var protocol = req.connection.encrypted ? 'https' : 'http';
-  var resBodyBuffer = 0;
 
   return {
     // TODO Browser Object
@@ -131,8 +181,8 @@ module.exports = function convertRequestToHar (req, res, reqReceived) {
       },
       response: {
         status: res.statusCode,
-        statusText: '', // TODO get status text
-        httpVersion: 'HTTP/1.1',
+        statusText: resHeadersObject ? resHeadersObject.responseStatusText : '',
+        httpVersion: resHeadersObject ? resHeadersObject.version : 'HTTP/1.1',
         headers: resHeaders,
         content: {
           // TODO get body size
@@ -140,9 +190,13 @@ module.exports = function convertRequestToHar (req, res, reqReceived) {
           // TODO get text
           // TODO get encoding
           size: resBodySize,
-          mimeType: res._headers ? res._headers['content-type'] : 'text/plain',
+          mimeType: resHeadersObject && resHeadersObject.headers
+            ? resHeadersObject.headers['content-type']
+            : 'text/plain',
         },
-        redirectUrl: res._headers && res._headers.location ? res._headers.location : '',
+        redirectUrl: resHeadersObject && resHeadersObject.headers.location
+          ? resHeadersObject.headers.location
+          : '',
         headersSize: resHeaderBuffer.length || -1,
         bodySize: resBodySize
       },
