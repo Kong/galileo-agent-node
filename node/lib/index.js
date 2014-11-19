@@ -45,6 +45,8 @@ module.exports = function Agent (agentKey, options) {
   });
 
   // API Recorder Middleware
+  // TODO use tamper or tamper-esque method to get raw body
+  //      to determine raw content size to get infer compression size
   return function (req, res, next) {
     var reqReceived = new Date();
 
