@@ -12,7 +12,7 @@ require('should');
 // Returns: Server address
 var createAnalyticsServer = function(socketHandler) {
   var sock = zmq.socket('pull');
-  sock.bindSync('tcp://127.0.0.1:4000');
+  sock.bindSync('tcp://*:4000');
 
   sock.on('message', function(data) {
     socketHandler(JSON.parse(data.toString('utf8')));
