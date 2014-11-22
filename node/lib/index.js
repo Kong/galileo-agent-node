@@ -1,6 +1,6 @@
 var async   = require('async');
 var har     = require('./har');
-var io      = require('socket.io-client');
+var zmq      = require('zmq');
 
 module.exports = function Agent (agentKey, options) {
   var self = this;
@@ -19,30 +19,17 @@ module.exports = function Agent (agentKey, options) {
 
   // Setup
   this.options = options || {};
-  this.connected = false;
   this.agentKey = agentKey;
 
   // Setup options
   this.options.host = this.options.host || 'mashgalileo.herokuapp.com';
-  this.options.port = this.options.port || 80;
+  this.options.port = this.options.port || 4000;
 
-  // Setup event queue
-  // TODO specify worker pool
   // TODO use msgpack + gzip?
-  this.eventQueue = async.queue(function (event, done) {
-    self.client.emit('record', event);
-    done();
-  });
-
-  // Pause event queue until connected to Analytics server
-  this.eventQueue.pause();
 
   // Connect to Analytics server
-  this.client = io('ws://' + self.options.host + ':' + self.options.port);
-  this.client.on('connect', function() {
-    self.connected = true;
-    self.eventQueue.resume();
-  });
+  var sock = zmq.socket('push');
+  sock.connect('tcp://' + self.options.host + ':' + self.options.port);
 
   // API Recorder Middleware
   // TODO use tamper or tamper-esque method to get raw body
@@ -53,7 +40,7 @@ module.exports = function Agent (agentKey, options) {
     res.on('finish', function () {
       var model = har(req, res, reqReceived);
       model.agentKey = agentKey;
-      self.eventQueue.push(model);
+      sock.send(JSON.stringify(model));
     });
 
     if (typeof next === 'function') {
