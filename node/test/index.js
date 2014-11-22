@@ -1,6 +1,6 @@
 var express = require('express');
 var http = require('http');
-var sio = require('socket.io');
+var zmq = require('zmq');
 var request = require('supertest');
 var agent = require('../lib');
 require('should');
@@ -11,36 +11,29 @@ require('should');
 // Creates a mock of the analytics server.
 // Returns: Server address
 var createAnalyticsServer = function(socketHandler) {
-  var server = http.Server();
-  var io = sio(server);
+  var sock = zmq.socket('pull');
+  sock.bindSync('tcp://*:4000');
 
-  io.on('connection', socketHandler.bind(server));
-
-  var addr = server.address();
-  if (!addr) {
-    addr = server.listen().address();
-  }
-
-  return addr;
+  sock.on('message', function(data) {
+    socketHandler(JSON.parse(data.toString('utf8')));
+  });
 };
 
 describe('Agent', function() {
 
   it('should record event with an Express server', function(done) {
-    var analyticsAddr = createAnalyticsServer(function(socket) {
-      socket.on('record', function(event) {
-        event.should.be.ok;
-        event.should.have.property('version');
+    createAnalyticsServer(function(data) {
+      data.should.be.ok;
+      data.should.have.property('version');
 
-        done();
-      });
+      done();
     });
 
     // Create Express server for api call
     var app = express();
 
     // Attach agent
-    app.use(agent('fake-key', {host: analyticsAddr.address, port: analyticsAddr.port}));
+    app.use(agent('fake-key', {host:'127.0.0.1', port:4000}));
 
     // Setup a route
     app.get('/', function(req, res) {
@@ -59,14 +52,12 @@ describe('Agent', function() {
 
   });
 
-  it('should record event with an HTTP server', function(done) {
-    var analyticsAddr = createAnalyticsServer(function(socket) {
-      socket.on('record', function(event) {
-        event.should.be.ok;
-        event.should.have.property('version');
+  it.skip('should record event with an HTTP server', function(done) {
+    var analyticsAddr = createAnalyticsServer(function(data) {
+      data.should.be.ok;
+      data.should.have.property('version');
 
-        done();
-      });
+      done();
     });
 
     // Create server and attach agent
