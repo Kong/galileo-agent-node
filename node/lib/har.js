@@ -137,7 +137,7 @@ function getQueryObjectFromUrl (parseUrl) {
 /**
  * Convert http request and responses to HAR
  */
-module.exports = function convertRequestToHar (req, res, reqReceived) {
+module.exports = function convertRequestToHar (req, res, reqReceived, serviceToken) {
   var resHeadersObject = parseResponseHeaderString(res._header);
   var agentResStartTime = new Date();
   var reqHeaders = objectToArray(req.headers);
@@ -158,21 +158,18 @@ module.exports = function convertRequestToHar (req, res, reqReceived) {
   var protocol = req.connection.encrypted ? 'https' : 'http';
 
   return {
-    // TODO Browser Object
-    // TODO Pages Object
     version: 1.2,
+    "service-token":serviceToken,
     creator: {
       name: package.name,
       version: package.version
     },
     entries: [{
-      // TODO pagerefid
-      // TODO connection
       serverIPAddress: getServerAddress(),
       startedDateTime: agentResStartTime.toISOString(),
       request: {
         method: req.method,
-        url: protocol + '://' + req.headers.host + req.url, // TODO construct full URL
+        url: protocol + '://' + req.headers.host + req.url,
         httpVersion: 'HTTP/' + req.httpVersion,
         queryString: reqQuery,
         headers: reqHeaders,
@@ -185,10 +182,6 @@ module.exports = function convertRequestToHar (req, res, reqReceived) {
         httpVersion: resHeadersObject ? resHeadersObject.version : 'HTTP/1.1',
         headers: resHeaders,
         content: {
-          // TODO get body size
-          // TODO get compression
-          // TODO get text
-          // TODO get encoding
           size: resBodySize,
           mimeType: resHeadersObject && resHeadersObject.headers
             ? resHeadersObject.headers['content-type']
@@ -202,10 +195,6 @@ module.exports = function convertRequestToHar (req, res, reqReceived) {
       },
       cache: {},
       timings: {
-        // TODO dns
-        // TODO connect
-        // TODO blocked
-        // TODO ssl
         send: 0, // TODO
         wait: waitTime,
         receive: 0  // TODO
