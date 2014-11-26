@@ -1,5 +1,5 @@
 {
-  "name": "mashape-analytics-agent",
+  "name": "apianalytics",
   "version": "0.1.0",
   "description": "Node Agent for API Analytics.",
   "main": "./lib/index.js",
