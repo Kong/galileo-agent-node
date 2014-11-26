@@ -2,16 +2,16 @@ var async   = require('async');
 var har     = require('./har');
 var io      = require('socket.io-client');
 
-module.exports = function Agent (agentKey, options) {
+module.exports = function Agent (serviceToken, options) {
   var self = this;
 
   // Ensure instance type
   if (!(this instanceof Agent)) {
-    return new Agent(agentKey, options);
+    return new Agent(serviceToken, options);
   }
 
   // Ensure agent key exists
-  if (!agentKey) {
+  if (!serviceToken) {
     throw new Error(
       'Mashape Analytics requires an API-KEY, to obtain a key visit: http://apianalytics.com'
     );
@@ -20,7 +20,7 @@ module.exports = function Agent (agentKey, options) {
   // Setup
   this.options = options || {};
   this.connected = false;
-  this.agentKey = agentKey;
+  this.serviceToken = serviceToken;
 
   // Setup options
   this.options.host = this.options.host || 'mashgalileo.herokuapp.com';
@@ -52,7 +52,7 @@ module.exports = function Agent (agentKey, options) {
 
     res.on('finish', function () {
       var model = har(req, res, reqReceived);
-      model.agentKey = agentKey;
+      model.serviceToken = serviceToken;
       self.eventQueue.push(model);
     });
 
