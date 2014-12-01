@@ -159,7 +159,7 @@ module.exports = function convertRequestToHar (req, res, reqReceived, serviceTok
 
   return {
     version: 1.2,
-    "service-token":serviceToken,
+    serviceToken:serviceToken,
     creator: {
       name: package.name,
       version: package.version
