@@ -23,7 +23,7 @@ module.exports = function Agent (serviceToken, options) {
   this.serviceToken = serviceToken;
 
   // Setup options
-  this.options.host = this.options.host || 'mashgalileo.herokuapp.com';
+  this.options.host = this.options.host || 'server.apianalytics.com';
   this.options.port = this.options.port || 80;
 
   // Setup event queue
