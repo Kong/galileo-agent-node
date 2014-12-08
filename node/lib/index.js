@@ -1,6 +1,7 @@
 var async   = require('async');
 var har     = require('./har');
 var io      = require('socket.io-client');
+var log     = require('debug')('apianalytics');
 
 module.exports = function Agent (serviceToken, options) {
   var self = this;
@@ -31,6 +32,7 @@ module.exports = function Agent (serviceToken, options) {
   // TODO use msgpack + gzip?
   this.eventQueue = async.queue(function (event, done) {
     self.client.emit('record', event);
+    log('Recorded %s %s request ', event.entries[0].request.method, event.entries[0].request.url);
     done();
   });
 
@@ -41,6 +43,7 @@ module.exports = function Agent (serviceToken, options) {
   this.client = io('ws://' + self.options.host + ':' + self.options.port);
   this.client.on('connect', function() {
     self.connected = true;
+    log('Connected to API Analytics socket.io server with service token %s', serviceToken);
     self.eventQueue.resume();
   });
 
