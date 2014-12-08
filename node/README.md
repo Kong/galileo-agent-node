@@ -7,44 +7,44 @@ Install
 -------
 
 ```bash
-npm install mashape-analytics-agent
+npm install apianalytics
 ```
 
 Usage with Express
 ------------------
 
 ```javascript
-var analytics = require('mashape-analytics-agent');
+var analytics = require('apianalytics');
 var app = require('express')();
 
 // Middleware to report all calls
-app.use(analytics('MASHAPE-ANALYTICS-KEY'));
+app.use(analytics('ANALYTICS-SERVICE-TOKEN'));
 ```
 
 If you have a specific API endpoint:
 ```javascript
-app.use('/api', analytics('MASHAPE-ANALYTICS-KEY'));
+app.use('/api', analytics('ANALYTICS-SERVICE-TOKEN'));
 ```
 
 Usage with Restify
 ------------------
 
 ```javascript
-var analytics = require('mashape-analytics-agent');
+var analytics = require('apianalytics');
 var server = require('restify').createServer({
   name: 'myapp',
   version: '1.0.0'
 });
 
 // Middleware to report all calls
-server.use(analytics('MASHAPE-ANALYTICS-KEY'));
+server.use(analytics('ANALYTICS-SERVICE-TOKEN'));
 ```
 
 Usage with HTTP Server
 ----------------------
 
 ``` javascript
-var analytics = require('mashape-analytics-agent')('MASHAPE-ANALYTICS-KEY');
+var analytics = require('apianalytics')('ANALYTICS-SERVICE-TOKEN');
 var server = require('http').createServer(function (req, res) {
     
     analytics(req, res);
@@ -54,4 +54,3 @@ var server = require('http').createServer(function (req, res) {
 });
 ```
 
-It may be easier to use
