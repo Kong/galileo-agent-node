@@ -1,6 +1,6 @@
 {
   "name": "apianalytics",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Node Agent for API Analytics.",
   "main": "./lib/index.js",
   "scripts": {

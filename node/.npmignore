@@ -8,6 +8,8 @@ lib-cov
 *.gz
 *.tmp
 *.sass-cache
+jscs.json
+.jshintrc
 
 pids
 logs
