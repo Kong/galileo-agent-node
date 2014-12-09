@@ -61,4 +61,4 @@ These are all optional.
 
 * host - API Analytics Socket.io server.
 * port - API Analytics Socket.io port.  
-* logger - Customize the logging `function(message)`. Default uses [debug](https://www.npmjs.org/package/debug)
+* logger - Customize the logging `function(message)`. Default uses [debug](https://www.npmjs.org/package/debug).
