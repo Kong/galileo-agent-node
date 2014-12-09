@@ -27,7 +27,7 @@ module.exports = function Agent (serviceToken, options) {
   this.options = options || {};
   this.connected = false;
   this.serviceToken = serviceToken;
-  this.log = options.logger || defaultLoggerFn;
+  this.log = this.options.logger || defaultLoggerFn;
 
   // Setup options
   this.options.host = this.options.host || 'server.apianalytics.com';
