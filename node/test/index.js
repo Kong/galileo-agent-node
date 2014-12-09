@@ -87,4 +87,23 @@ describe('Agent', function() {
         .end(function() {});
     });
   });
+
+  it('should use custom logger', function(done) {
+    var analyticsAddr = createAnalyticsServer(function(socket) {
+    });
+
+    // Create server and attach agent
+    var analytics = agent('fake-key', {host: analyticsAddr.address, port: analyticsAddr.port, logger: function(message) {
+      message.should.equal('Connected to API Analytics socket.io server with service token fake-key.');
+
+      done();
+    }});
+    var server = http.createServer(function(req, res) {
+      analytics(req, res);
+
+      res.writeHead(200, { 'Content-Type': 'text/plain'});
+      res.write('This is a test');
+      res.end();
+    });
+  });
 });
