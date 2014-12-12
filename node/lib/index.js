@@ -1,8 +1,9 @@
-var async   = require('async');
-var har     = require('./har');
-var io      = require('socket.io-client');
-var log     = require('debug')('apianalytics');
-var util    = require('util');
+var async       = require('async');
+var har         = require('./har');
+var io          = require('socket.io-client');
+var log         = require('debug')('apianalytics');
+var onFinished  = require('on-finished');
+var util        = require('util');
 
 var defaultLoggerFn = function(message) {
   log(message);
@@ -38,7 +39,7 @@ module.exports = function Agent (serviceToken, options) {
   // TODO use msgpack + gzip?
   this.eventQueue = async.queue(function (event, done) {
     self.client.emit('record', event);
-    self.log(util.format('Recorded %s %s request.', event.entries[0].request.method, event.entries[0].request.url));
+    self.log(util.format('Recorded %s %s request with a response of %s %s.', event.entries[0].request.method, event.entries[0].request.url, event.entries[0].response.status, event.entries[0].response.statusText));
     done();
   });
 
@@ -63,8 +64,9 @@ module.exports = function Agent (serviceToken, options) {
   return function (req, res, next) {
     var reqReceived = new Date();
 
-    res.on('finish', function () {
+    onFinished(res, function() {
       var model = har(req, res, reqReceived, serviceToken);
+      self.log(util.format('Detected \033[32mfinish\033[39m with %s response on request, %s %s.', res.statusCode, model.entries[0].request.method, model.entries[0].request.url));
       self.eventQueue.push(model);
     });
 
