@@ -54,3 +54,11 @@ var server = require('http').createServer(function (req, res) {
 });
 ```
 
+Custom Options
+--------------
+
+These are all optional.
+
+* host - API Analytics Socket.io server.
+* port - API Analytics Socket.io port.  
+* logger - Customize the logging `function(message)`. Default uses [debug](https://www.npmjs.org/package/debug).
