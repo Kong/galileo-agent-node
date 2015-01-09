@@ -55,7 +55,7 @@ module.exports = function Agent (serviceToken, options) {
   });
   this.client.on('disconnect', function() {
     self.log('Disconnected from API Analytics socket.io.');
-    this.eventQueue.pause();
+    self.eventQueue.pause();
   });
 
   // API Recorder Middleware
