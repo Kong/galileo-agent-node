@@ -158,7 +158,7 @@ module.exports = function convertRequestToHar (req, res, reqReceived, serviceTok
   var protocol = req.connection.encrypted ? 'https' : 'http';
 
   return {
-    version: 1.2,
+    version: '1.2',
     serviceToken:serviceToken,
     creator: {
       name: package.name,
