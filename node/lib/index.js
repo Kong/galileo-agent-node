@@ -31,7 +31,7 @@ module.exports = function Agent (serviceToken, options) {
   this.log = this.options.logger || defaultLoggerFn;
 
   // Setup options
-  this.options.host = this.options.host || 'server.apianalytics.com';
+  this.options.host = this.options.host || 'socket.apianalytics.com';
   this.options.port = this.options.port || 80;
 
   // Setup event queue
