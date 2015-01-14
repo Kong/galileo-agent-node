@@ -1,4 +1,4 @@
-# The ApiAnalytics.com logging interface
+# The ApiAnalytics.com interface
 
 This specification documents the public interface to log data points into apianalytics.com
 
@@ -11,10 +11,7 @@ The server accepts only accepts a slightly customized version of the HAR (HTTP A
 Official
 
 - [Node.js Agent](https://github.com/Mashape/analytics-agents)
-
-Community
-
-- [Precompiled portable proxy](https://github.com/SGrondin/analytics-harchiver)
+- [Universal lightweight proxy](https://github.com/SGrondin/analytics-harchiver)
 
 ## HAR
 
@@ -94,18 +91,18 @@ Socket.io is the simplest, but isn't available on every platform and language. Z
 
 ### Socket.io
 
-Open a connection to `mashgalileo.herokuapp.com`, port `4000`. Emit JSON data on the channel `record`.
+Open a connection to `server.apianalytics.com`, port `4000`. Emit JSON data on the channel `record`.
 
 Example:
 ```javascript
 var io = require("socket.io-client");
-var socket = io("ws://mashgalileo.herokuapp.com:4000");
+var socket = io("ws://server.apianalytics.com:4000");
 socket.emit("record", harObject);
 ```
 
 ### ZMQ
 
-Open a connection to `mashgalileo.herokuapp.com`, port `5000`, in `push` mode. Send a string representation of the HAR object.
+Open a connection to `server.apianalytics.com`, port `5000`, in `push` mode. Send a string representation of the HAR object.
 
 Example:
 ```javascript
@@ -116,8 +113,6 @@ socket.send(JSON.stringify(harObject));
 
 ### HTTP
 
-**Not currently supported by the ApiAnalytics.com server.**
-
-Send HTTP `POST` requests to `mashgalileo.herokuapp.com`, port `6000`. The body must be a valid HAR object.
+Send HTTP `POST` requests to `server.apianalytics.com`, port `6000`. The body must be a valid HAR object.
 
 
