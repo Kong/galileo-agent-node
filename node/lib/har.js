@@ -144,6 +144,7 @@ module.exports = function convertRequestToHar (req, res, reqReceived, serviceTok
   var reqHeaderBuffer = new Buffer(createHeaderStringFromReqObject(req));
   var reqQuery = objectToArray(getQueryObjectFromUrl(req.url));
   var reqReceivedTime = reqReceived.getTime();
+  console.log(JSON.stringify(req.headers, null, 2));
   var reqBodySize = req.headers['content-length']
     ? parseFloat(req.headers['content-length'])
     : -1;
@@ -159,14 +160,14 @@ module.exports = function convertRequestToHar (req, res, reqReceived, serviceTok
 
   return {
     version: '1.2',
-    serviceToken:serviceToken,
+    serviceToken: serviceToken,
     creator: {
       name: package.name,
       version: package.version
     },
     entries: [{
       serverIPAddress: getServerAddress(),
-      startedDateTime: agentResStartTime.toISOString(),
+      startedDateTime: agentResStartTime.getTime(),
       request: {
         method: req.method,
         url: protocol + '://' + req.headers.host + req.url,
