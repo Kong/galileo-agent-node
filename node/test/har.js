@@ -18,7 +18,7 @@ describe('HAR', function() {
       var event = har(req, res, now);
       var headerBuffer = new Buffer(res._header);
 
-      event.should.have.property('version').and.equal(1.2); // HAR 1.2
+      event.should.have.property('version').and.equal('1.2'); // HAR 1.2
       event.creator.should.have.property('name').and.equal(package.name);
       event.creator.should.have.property('version').and.equal(package.version);
 
@@ -56,7 +56,7 @@ describe('HAR', function() {
       res.on('finish', function() {
         var event = har(req, res, now);
 
-        event.should.have.property('version').and.equal(1.2); // HAR 1.2
+        event.should.have.property('version').and.equal('1.2'); // HAR 1.2
         event.should.have.property('creator');
         event.should.have.property('entries').and.be.an.Array;
 

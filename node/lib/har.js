@@ -1,9 +1,8 @@
 // Requires
 var util = require('util');
 var url = require('url');
-var qs = require('qs');
 var os = require('os');
-var package = require('../package.json');
+var pkg = require('../package.json');
 
 // Server interface list
 var networkInterfaces = os.networkInterfaces();
@@ -80,32 +79,6 @@ function parseResponseHeaderString (string) {
   return output;
 }
 
-function setCharAt (str, index, chr) {
-  return (index > str.length - 1) ? str : str.substr(0, index) + chr + str.substr(index + 1);
-}
-
-function normalizeHeaderName (headerName) {
-  var pieces = headerName.split('-');
-  var length = pieces.length;
-  var index = 0;
-
-  for (; index < length; index++) {
-    pieces[index] = setCharAt(pieces[index], 0, pieces[index].charAt(0).toUpperCase());
-  }
-
-  return pieces.join('-');
-}
-
-function createHeaderStringFromReqObject (req) {
-  var headers = util.format('%s %s HTTP/%d.%d\r\n', req.method, req.url, req.versionMajor, req.versionMinor);
-
-  for (var key in req.headers) {
-    headers += normalizeHeaderName(key) + ': ' + req.headers[key] + '\r\n';
-  }
-
-  return headers + '\r\n';
-}
-
 /**
  * Transform objects into an array of key value pairs.
  */
@@ -113,10 +86,10 @@ function objectToArray (obj) {
   var results = [];
   var names = Object.keys(obj);
 
-  for(var i = names.length; i--;) {
+  while (name = names.pop() ) {
     results.push({
-      name: names[i],
-      value: obj[names[i]]
+      name: name,
+      value: obj[name]
     });
   }
 
@@ -124,74 +97,81 @@ function objectToArray (obj) {
 }
 
 /**
- * Parse url for a query object.
+ * uses the Content-Length header for body size
+ *
+ * TODO fall back to manual measurement when Content-Length is not available
  */
-function getQueryObjectFromUrl (parseUrl) {
-  if (typeof parseUrl === 'string') {
-    return qs.parse(url.parse(parseUrl).query);
+function getBodySize (obj, headers) {
+  if (headers && !!headers['content-length']) {
+    return parseInt(headers['content-length'])
+  } else {
+    return -1;
   }
+}
 
-  return {};
+function getHeaderSize (req) {
+  var keys = Object.keys(req.headers);
+
+  var values = keys.map(function(key) {
+    return req.headers[key];
+  });
+
+  return new Buffer(
+    req.method + req.url + req.versionMajor + req.versionMinor + keys.join() + values.join()
+  ).length + (keys.length * 2) + 14;
 }
 
 /**
  * Convert http request and responses to HAR
  */
 module.exports = function convertRequestToHar (req, res, reqReceived, serviceToken) {
-  var resHeadersObject = parseResponseHeaderString(res._header);
+  var resHeaders = parseResponseHeaderString(res._header);
   var agentResStartTime = new Date();
   var reqHeaders = objectToArray(req.headers);
-  var reqHeaderBuffer = new Buffer(createHeaderStringFromReqObject(req));
-  var reqQuery = objectToArray(getQueryObjectFromUrl(req.url));
-  var reqReceivedTime = reqReceived.getTime();
+  var reqQuery = objectToArray(url.parse(req.url, true).query);
+
   console.log(JSON.stringify(req.headers, null, 2));
-  var reqBodySize = req.headers['content-length']
-    ? parseFloat(req.headers['content-length'])
-    : -1;
-  var resHeaders = objectToArray(resHeadersObject.headers || {});
-  var resHeaderBuffer = res._header
-    ? new Buffer(res._header)
-    : -1;
-  var resBodySize = resHeadersObject && resHeadersObject._headers['content-length']
-    ? parseFloat(resHeadersObject._headers['content-length'])
-    : -1;
-  var waitTime = agentResStartTime.getTime() - reqReceivedTime;
+
+  var resHeaderSize = res._header ? new Buffer(res._header).length : -1;
+  var resBodySize = getBodySize(res, resHeaders);
+  var waitTime = agentResStartTime.getTime() - reqReceived.getTime();
   var protocol = req.connection.encrypted ? 'https' : 'http';
 
   return {
     version: '1.2',
     serviceToken: serviceToken,
     creator: {
-      name: package.name,
-      version: package.version
+      name: pkg.name,
+      version: pkg.version
     },
     entries: [{
       serverIPAddress: getServerAddress(),
-      startedDateTime: agentResStartTime.getTime(),
+      startedDateTime: agentResStartTime.toISOString(),
       request: {
         method: req.method,
         url: protocol + '://' + req.headers.host + req.url,
         httpVersion: 'HTTP/' + req.httpVersion,
         queryString: reqQuery,
         headers: reqHeaders,
-        headersSize: reqHeaderBuffer.length || -1,
-        bodySize: reqBodySize
+        headersSize: getHeaderSize(req),
+        bodySize: getBodySize(req, req.headers)
       },
       response: {
         status: res.statusCode,
-        statusText: resHeadersObject ? resHeadersObject.responseStatusText : '',
-        httpVersion: resHeadersObject ? resHeadersObject.version : 'HTTP/1.1',
-        headers: resHeaders,
+        statusText: resHeaders ? resHeaders.responseStatusText : '',
+        httpVersion: resHeaders ? resHeaders.version : 'HTTP/1.1',
+        headers: objectToArray(resHeaders.headers || {}),
         content: {
+          // TODO measure before compression
           size: resBodySize,
-          mimeType: resHeadersObject && resHeadersObject.headers
-            ? resHeadersObject.headers['content-type']
-            : 'text/plain',
+          mimeType: resHeaders && resHeaders.headers
+            ? resHeaders.headers['content-type']
+            : 'application/octet-stream',
         },
-        redirectUrl: resHeadersObject && resHeadersObject.headers.location
-          ? resHeadersObject.headers.location
+        redirectUrl: resHeaders && resHeaders.headers.location
+          ? resHeaders.headers.location
           : '',
-        headersSize: resHeaderBuffer.length || -1,
+        headersSize: resHeaderSize,
         bodySize: resBodySize
       },
       cache: {},
