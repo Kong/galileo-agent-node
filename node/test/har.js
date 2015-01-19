@@ -1,7 +1,7 @@
 var express = require('express');
 var request = require('supertest');
 var http = require('http');
-var har = require('../lib/har');
+var helpers = require('../lib/helpers');
 var package = require('../package.json');
 require('should');
 

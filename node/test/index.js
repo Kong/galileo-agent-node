@@ -1,5 +1,6 @@
 var express = require('express');
 var http = require('http');
+var util = require('util');
 var sio = require('socket.io');
 var request = require('supertest');
 var agent = require('../lib');
@@ -10,27 +11,23 @@ require('should');
  */
 // Creates a mock of the analytics server.
 // Returns: Server address
-var createAnalyticsServer = function(socketHandler) {
+var createServer = function(socketHandler) {
   var server = http.Server();
   var io = sio(server);
+  var addr = server.listen().address();
 
   io.on('connection', socketHandler.bind(server));
 
-  var addr = server.address();
-  if (!addr) {
-    addr = server.listen().address();
-  }
-
-  return addr;
+  return addr.address + ':' + addr.port;
 };
 
 describe('Agent', function() {
 
   it('should record event with an Express server', function(done) {
-    var analyticsAddr = createAnalyticsServer(function(socket) {
-      socket.on('record', function(event) {
-        event.should.be.ok;
-        event.should.have.property('version');
+    var host = createServer(function(socket) {
+      socket.on('message', function(har) {
+        har.should.be.ok;
+        har.should.have.property('version');
 
         done();
       });
@@ -40,7 +37,9 @@ describe('Agent', function() {
     var app = express();
 
     // Attach agent
-    app.use(agent('fake-key', {host: analyticsAddr.address, port: analyticsAddr.port}));
+    app.use(agent('fake-key', {
+      host: host
+    }));
 
     // Setup a route
     app.get('/', function(req, res) {
@@ -60,8 +59,8 @@ describe('Agent', function() {
   });
 
   it('should record event with an HTTP server', function(done) {
-    var analyticsAddr = createAnalyticsServer(function(socket) {
-      socket.on('record', function(event) {
+    var host = createServer(function(socket) {
+      socket.on('message', function(event) {
         event.should.be.ok;
         event.should.have.property('version');
 
@@ -70,7 +69,10 @@ describe('Agent', function() {
     });
 
     // Create server and attach agent
-    var analytics = agent('fake-key', {host: analyticsAddr.address, port: analyticsAddr.port});
+    var analytics = agent('fake-key', {
+      host: host
+    });
+
     var server = http.createServer(function(req, res) {
       analytics(req, res);
 
@@ -89,15 +91,19 @@ describe('Agent', function() {
   });
 
   it('should use custom logger', function(done) {
-    var analyticsAddr = createAnalyticsServer(function(socket) {
+    var host = createServer(function(socket) {
     });
 
     // Create server and attach agent
-    var analytics = agent('fake-key', {host: analyticsAddr.address, port: analyticsAddr.port, logger: function(message) {
-      message.should.equal('Connected to API Analytics socket.io server with service token fake-key.');
+    var analytics = agent('fake-key', {
+      host: host,
+      logger: function(message) {
+        message.should.equal(util.format('Connected using token: %s', 'fake-key'));
 
-      done();
-    }});
+        done();
+      }
+    });
+
     var server = http.createServer(function(req, res) {
       analytics(req, res);
 
