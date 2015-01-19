@@ -96,9 +96,10 @@ module.exports = function Agent (serviceToken, options) {
     onFinished(res, function createEntry () {
       var agentResStartTime = new Date();
       var resHeaders = helpers.parseResponseHeaderString(res._header);
-      var resBodySize = helpers.getBodySize(res, resHeaders);
+      var resBodySize = helpers.getBodySize(resHeaders.headersArr);
       var waitTime = agentResStartTime.getTime() - reqReceived.getTime();
       var protocol = req.connection.encrypted ? 'https' : 'http';
+      var reqHeadersArr = helpers.objectToArray(req.headers);
 
       var entry = {
         serverIPAddress: helpers.getServerAddress(),
@@ -108,27 +109,28 @@ module.exports = function Agent (serviceToken, options) {
           url: util.format('%s://%s%s', protocol, req.headers.host, req.url),
           httpVersion: 'HTTP/' + req.httpVersion,
           queryString: helpers.objectToArray(url.parse(req.url, true).query),
-          headers: helpers.objectToArray(req.headers),
-          headersSize: helpers.getHeaderSize(req),
-          bodySize: helpers.getBodySize(req, req.headers)
+          headers: reqHeadersArr,
+          headersSize: helpers.getReqHeaderSize(req),
+          bodySize: helpers.getBodySize(reqHeadersArr)
         },
 
         response: {
           status: res.statusCode,
-          statusText: resHeaders ? resHeaders.responseStatusText : '',
-          httpVersion: resHeaders ? resHeaders.version : 'HTTP/1.1',
-          headers: helpers.objectToArray(resHeaders.headers || {}),
+          statusText: resHeaders.statusText,
+          httpVersion: resHeaders.version,
+          headers: resHeaders.headersArr,
           content: {
             // TODO measure before compression
             size: resBodySize,
-            mimeType: resHeaders && resHeaders.headers
-              ? resHeaders.headers['content-type']
-              : 'application/octet-stream',
+            mimeType: resHeaders.headersObj && resHeaders.headersObj['content-type']
+              ? resHeaders.headersObj['content-type']
+              : 'application/octet-stream'
           },
 
-          redirectUrl: resHeaders && resHeaders.headers.location
-            ? resHeaders.headers.location
-            : '',
+          redirectUrl: resHeaders.headersObj && resHeaders.headersObj.location
+            ? resHeaders.headersObj.location
+            : ''
+          ,
 
           // res._header is a native node object
           headersSize: res._header ? new Buffer(res._header).length : -1,
