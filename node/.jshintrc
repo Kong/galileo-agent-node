@@ -11,7 +11,7 @@
   "strict": false,
   "undef": true,
   "unused": "vars",
-  "predef": [
+  "globals": [
     "describe",
     "it",
     "log"

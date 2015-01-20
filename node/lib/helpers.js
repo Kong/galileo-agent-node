@@ -61,8 +61,6 @@ module.exports = {
    */
   parseStatusLine: function (line) {
     var pieces = line.split(' ');
-    var versionNumberPieces;
-    var versionPieces;
 
     // Header string pieces
     var output = {
@@ -74,6 +72,9 @@ module.exports = {
     return output;
   },
 
+  /**
+   *
+   */
   parseHeaderLine: function (line) {
     var pieces = line.split(': ');
     var name = pieces.shift();
@@ -82,7 +83,7 @@ module.exports = {
     return {
       name: name,
       value: value
-    }
+    };
   },
 
   /**
@@ -113,7 +114,7 @@ module.exports = {
       var regex = new RegExp(key, 'i');
       for (var i in headers) {
         if (regex.test(headers[i].name)) {
-          return headers[i].value
+          return headers[i].value;
         }
       }
     }
@@ -127,7 +128,7 @@ module.exports = {
   getReqHeaderSize: function (req) {
     var keys = Object.keys(req.headers);
 
-    var values = keys.map(function(key) {
+    var values = keys.map(function (key) {
       return req.headers[key];
     });
 

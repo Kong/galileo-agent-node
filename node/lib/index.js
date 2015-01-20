@@ -77,12 +77,12 @@ module.exports = function Agent (serviceToken, options) {
   // Connect to Analytics server
   this.socket = io(util.format('ws://%s', this.opts.host));
 
-  this.socket.on('connect', function() {
+  this.socket.on('connect', function () {
     self.opts.logger(util.format('Connected using token: %s', serviceToken));
     self.queue.resume();
   });
 
-  this.socket.on('disconnect', function() {
+  this.socket.on('disconnect', function () {
     self.opts.logger('Disconnected');
     self.queue.pause();
   });
@@ -114,7 +114,7 @@ module.exports = function Agent (serviceToken, options) {
       original.end.call(res, data, encoding);
 
       if (chunked.length) {
-        var data = Buffer.concat(chunked);
+        data = Buffer.concat(chunked);
       }
 
       // construct body
@@ -175,7 +175,7 @@ module.exports = function Agent (serviceToken, options) {
 
       // send to queue
       self.queue.push(entry);
-    }
+    };
 
     if (typeof next === 'function') {
       next();

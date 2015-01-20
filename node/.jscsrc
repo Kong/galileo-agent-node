@@ -1,10 +1,5 @@
 {
   "disallowEmptyBlocks": true,
-  "disallowImplicitTypeConversion": [
-    "binary",
-    "boolean",
-    "numeric"
-  ],
   "disallowKeywords": [
     "with"
   ],
@@ -44,13 +39,11 @@
   ],
   "requireDotNotation": true,
   "requireLineFeedAtFileEnd": true,
-  "requireOperatorBeforeLineBreak": true,
   "requireParenthesesAroundIIFE": true,
   "requireSpaceAfterBinaryOperators": true,
   "requireSpaceAfterKeywords": true,
   "requireSpaceAfterLineComment": true,
   "requireSpaceBeforeBinaryOperators": true,
-  "requireSpaceBeforeBlockStatements": true,
   "requireSpaceBeforeBlockStatements": true,
   "requireSpaceBeforeObjectValues": true,
   "requireSpacesInConditionalExpression": true,
