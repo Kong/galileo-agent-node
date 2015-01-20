@@ -32,10 +32,9 @@ describe('Agent Middleware', function () {
 
   it('sends a message with an Express server', function (done) {
     io.on('connection', function (socket) {
-      socket.on('message', function (har) {
-        har.should.be.an.Object;
-        har.should.have.property('version').and.equal('1.2');
-        har.should.have.property('serviceToken').and.equal(serviceToken);
+      socket.on('message', function (message) {
+        message.should.be.an.Object;
+        message.should.have.property('serviceToken').and.equal(serviceToken);
 
         done();
       });
@@ -61,10 +60,9 @@ describe('Agent Middleware', function () {
   });
   it('sends a message with a standard HTTP server', function (done) {
     io.on('connection', function (socket) {
-      socket.on('message', function (har) {
-        har.should.be.an.Object;
-        har.should.have.property('version').and.equal('1.2');
-        har.should.have.property('serviceToken').and.equal(serviceToken);
+      socket.on('message', function (message) {
+        message.should.be.an.Object;
+        message.should.have.property('serviceToken').and.equal(serviceToken);
 
         done();
       });
@@ -90,8 +88,8 @@ describe('Agent Middleware', function () {
 
   it('sends a batched message', function (done) {
     io.on('connection', function (socket) {
-      socket.on('message', function (har) {
-        har.should.have.property('entries').and.be.an.Array.with.lengthOf(10);
+      socket.on('message', function (message) {
+        message.har.log.should.have.property('entries').and.be.an.Array.with.lengthOf(10);
 
         done();
       });
@@ -123,10 +121,11 @@ describe('Agent Middleware', function () {
 
   it('should convert http server req, res to HAR', function (done) {
     io.on('connection', function (socket) {
-      socket.on('message', function (har) {
+      socket.on('message', function (message) {
+        var har = message.har.log;
+
         har.should.be.an.Object;
         har.should.have.property('version').and.equal('1.2');
-        har.should.have.property('serviceToken').and.equal(serviceToken);
 
         har.should.have.property('creator').and.be.an.Object;
         har.creator.should.have.property('name').and.equal(pkg.name);
