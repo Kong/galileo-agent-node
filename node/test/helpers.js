@@ -35,7 +35,7 @@ describe('Helpers', function () {
     helpers.objectToArray({foo: 'bar'}).should.be.an.Array.and.containEql({
       name: 'foo',
       value: 'bar'
-    })
+    });
   });
 
   it('grabs header value regardless of case, with default fallback', function () {
@@ -45,11 +45,11 @@ describe('Helpers', function () {
     helpers.getHeaderValue(null, 'foo', -1).should.be.a.Number.and.equal(-1);
     helpers.getHeaderValue([], 'foo', -1).should.be.a.Number.and.equal(-1);
     helpers.getHeaderValue({}, 'foo', -1).should.be.a.Number.and.equal(-1);
-  })
+  });
 
   it('measures header message byte size', function () {
     var data = helpers.parseResponseHeaderString(fixture.headers.join('\r\n'));
 
     helpers.getReqHeaderSize({headers: data.headersObj }).should.be.a.Number.and.equal(673);
-  })
+  });
 });

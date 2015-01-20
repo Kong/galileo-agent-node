@@ -75,15 +75,33 @@ module.exports = function Agent (serviceToken, options) {
   this.queue.pause();
 
   // Connect to Analytics server
+  self.opts.logger(util.format('starting socket connection to %s using token: %s', this.opts.host, serviceToken));
+
+  // TODO set reconnectionAttempts count
   this.socket = io(util.format('ws://%s', this.opts.host));
 
   this.socket.on('connect', function () {
-    self.opts.logger(util.format('Connected using token: %s', serviceToken));
+    self.opts.logger(util.format('Connected to %s using token: %s', self.opts.host, serviceToken));
+    self.queue.resume();
+  });
+
+  this.socket.on('reconnect', function () {
+    self.opts.logger(util.format('Reconnected to %s using token: %s', self.opts.host, serviceToken));
+    self.queue.resume();
+  });
+
+  this.socket.on('reconnecting', function (number) {
+    self.opts.logger(util.format('Reconnect attemp #%d to %s using token: %s', number, self.opts.host, serviceToken));
     self.queue.resume();
   });
 
   this.socket.on('disconnect', function () {
-    self.opts.logger('Disconnected');
+    self.opts.logger('Disconnected from %s', self.opts.host);
+    self.queue.pause();
+  });
+
+  this.socket.on('error', function (err) {
+    self.opts.logger(util.format('Error connecting to %s using token: %s, details: %s', self.opts.host, serviceToken, err));
     self.queue.pause();
   });
 
@@ -167,7 +185,7 @@ module.exports = function Agent (serviceToken, options) {
 
       // log some info
       self.opts.logger(util.format.apply(null, [
-        'Detected \033[32mfinish\033[39m with %s response on request, %s %s',
+        'Detected "finish" with %s response on request, %s %s',
         res.statusCode,
         entry.request.method,
         entry.request.url

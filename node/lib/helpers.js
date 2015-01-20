@@ -39,7 +39,7 @@ module.exports = {
     lines = lines.filter(Boolean);
 
     // Parse status line
-    var output = this.parseStatusLine(status);
+    var output = this.parseStartLine(status);
 
     // init headers object & array
     output.headersObj = {};
@@ -59,7 +59,7 @@ module.exports = {
   /**
    * parse status line into an object
    */
-  parseStatusLine: function (line) {
+  parseStartLine: function (line) {
     var pieces = line.split(' ');
 
     // Header string pieces
@@ -90,6 +90,10 @@ module.exports = {
    * Transform objects into an array of key value pairs.
    */
   objectToArray: function (obj) {
+    if (!obj || typeof obj !== 'object') {
+      return [];
+    }
+
     var results = [];
     var names = Object.keys(obj);
     var name;
