@@ -1,56 +1,72 @@
-Mashape Analytics Agent (node.js)
--------------------------------------------
+# Mashape Analytics Agent (node.js)
 
-Middleware agent to report requests to a mashape analytics server.
+Middleware agent to report HTTP traffic to a [Mashape API Analytics](http://apianalytics.com/).
 
-Install
--------
+## Installation
 
-```bash
+```shell
 npm install apianalytics
 ```
 
-Usage with Express
-------------------
+## Usage
 
-```javascript
+
+```js
 var analytics = require('apianalytics');
+
+analytics('SERVICE-TOKEN', {
+  sendBody: true,
+  reqByteLimit: 1e6, // ~ 1MB
+  entriesPerHar: 1
+})
+```
+
+obtain your `SERVICE-TOKEN` by registering for a free trial at [APIAnalytics.com](http://apianalytics.com)
+
+###### Example: Express
+
+```js
+var analytics = require('apianalytics');
+
 var app = require('express')();
 
-// Middleware to report all calls
-app.use(analytics('ANALYTICS-SERVICE-TOKEN'));
+// api-analytics middleware
+app.use(analytics('SERVICE-TOKEN'));
 ```
 
 If you have a specific API endpoint:
-```javascript
-app.use('/api', analytics('ANALYTICS-SERVICE-TOKEN'));
+
+```js
+app.use('/api', analytics('SERVICE-TOKEN'));
 ```
 
-Usage with Restify
-------------------
+###### Example: Restify
 
-```javascript
+```js
 var analytics = require('apianalytics');
+
 var server = require('restify').createServer({
   name: 'myapp',
   version: '1.0.0'
 });
 
-// Middleware to report all calls
-server.use(analytics('ANALYTICS-SERVICE-TOKEN'));
+// api-analytics middleware
+server.use(analytics('SERVICE-TOKEN'));
 ```
 
-Usage with HTTP Server
-----------------------
+###### Example: NodeJS HTTP Server
 
 ``` javascript
-var analytics = require('apianalytics')('ANALYTICS-SERVICE-TOKEN');
-var server = require('http').createServer(function (req, res) {
-    
-    analytics(req, res);
+var analytics = require('apianalytics');
 
-    // Other logic here...
-    
+// initiate
+var middleware = analytics('SERVICE-TOKEN');
+
+var server = require('http').createServer(function (req, res) {  
+  // api-analytics middleware
+  middleware(req, res);
+
+  // Other logic here...
 });
 ```
 
@@ -59,6 +75,10 @@ Custom Options
 
 These are all optional.
 
-* host - API Analytics Socket.io server.
-* port - API Analytics Socket.io port.  
-* logger - Customize the logging `function(message)`. Default uses [debug](https://www.npmjs.org/package/debug).
+| Name            | Description                               | Default                                                   |
+| --------------- | ----------------------------------------- | --------------------------------------------------------- |
+| `host`          | **API Analytics** host                    | `"socket.apianalytics.com:80"` **DO NOT CHANGE!**         |
+| `logger`        | Customize the logging `function(message)` | Default uses [debug](https://www.npmjs.org/package/debug) |
+| `sendBody`      | send Request and Response bodies          | `false`                                                   |
+| `reqByteLimit`  | limit the request body capture size       | `1e10`                                                    |
+| `entriesPerHar` | num of entries per HAR object sent        | `1`                                                       |

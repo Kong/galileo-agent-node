@@ -27,7 +27,7 @@ module.exports = function Agent (serviceToken, options) {
     logger: debug,
     sendBody: false,
     reqByteLimit: 1e10,
-    batch: 1
+    entriesPerHar: 1
   });
 
   // assign new values or keep old ones
@@ -41,7 +41,7 @@ module.exports = function Agent (serviceToken, options) {
   this.queue = async.queue(function (entry, done) {
     self.har.entries.push(entry);
 
-    if (self.har.entries.length >= self.opts.batch) {
+    if (self.har.entries.length >= self.opts.entriesPerHar) {
       // TODO benchmark this
       self.socket.send(JSON.parse(JSON.stringify(self.har)));
 
