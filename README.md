@@ -1,11 +1,11 @@
 # Mashape Analytics Agent (node.js)
 
-Middleware agent to report HTTP traffic to a [Mashape API Analytics](http://apianalytics.com/).
+Middleware agent to report HTTP traffic to [Mashape API Analytics](http://apianalytics.com/).
 
 ## Installation
 
 ```shell
-npm install apianalytics
+npm install apianalytics --save
 ```
 
 ## Usage
