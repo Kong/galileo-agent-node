@@ -1,0 +1,18 @@
+{
+  "headers": [
+    "HTTP/1.1 200 OK",
+    "Cache-control: no-cache=\"set-cookie\"",
+    "Content-Type: application/json; charset=utf-8",
+    "Date: Mon, 19 Jan 2015 20:46:00 GMT",
+    "ETag: W/'90-d0d442f0'",
+    "Server: nginx/1.6.2",
+    "set-cookie: mashape.sid=s%3A8F1EcJyTdGemvRpk5PBvVF5RzDvbeqZw.%2F7FBcXU3%2FXK4on8eyv21pLkfofNTSOgHqmHZ3RkKiPc; Path=/; HttpOnly",
+    "Set-Cookie: AWSELB=1F55FB2302CD41C340E65193ACEA53ADBEDBFC9768D04BCEA47B70DA1A07FCEF73FBB4A80C89B0A9C3A9B14F9A585620FA90365E6B6083D9ACABEA7E41D7EBFC92A0DD6FDA;PATH=/",
+    "Strict-Transport-Security: max-age=7776000000; includeSubDomains",
+    "Vary: Accept, Accept-Encoding",
+    "X-FRAME-OPTIONS: DENY",
+    "X-XSS-Protection: 1; mode=block",
+    "Content-Length: 144",
+    "Connection: keep-alive"
+  ]
+}
