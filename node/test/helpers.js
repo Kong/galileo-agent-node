@@ -38,16 +38,13 @@ describe('Helpers', function () {
     })
   });
 
-  it('grabs body size from Content-Length header', function () {
+  it('grabs header value regardless of case, with default fallback', function () {
     var data = helpers.parseResponseHeaderString(fixture.headers.join('\r\n'));
 
-    helpers.getBodySize(data.headersArr).should.be.a.Number.and.equal(144);
-  });
-
-  it('fails at getting the body size', function () {
-    helpers.getBodySize(null).should.be.a.Number.and.equal(-1);
-    helpers.getBodySize([]).should.be.a.Number.and.equal(-1);
-    helpers.getBodySize({}).should.be.a.Number.and.equal(-1);
+    helpers.getHeaderValue(data.headersArr, 'content-length', false).should.be.a.String.and.equal('144');
+    helpers.getHeaderValue(null, 'foo', -1).should.be.a.Number.and.equal(-1);
+    helpers.getHeaderValue([], 'foo', -1).should.be.a.Number.and.equal(-1);
+    helpers.getHeaderValue({}, 'foo', -1).should.be.a.Number.and.equal(-1);
   })
 
   it('measures header message byte size', function () {

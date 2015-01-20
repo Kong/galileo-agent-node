@@ -1,7 +1,6 @@
 var url         = require('url');
 var util        = require('util');
 var async       = require('async');
-var onFinished  = require('on-finished');
 var io          = require('socket.io-client');
 var debug       = require('debug')('apianalytics');
 
@@ -26,6 +25,7 @@ module.exports = function Agent (serviceToken, options) {
   self.opts = Object.create({
     host: 'socket.apianalytics.com:80',
     logger: debug,
+    sendBody: false,
     batch: 1
   });
 
@@ -91,12 +91,39 @@ module.exports = function Agent (serviceToken, options) {
   // TODO use tamper or tamper-esque method to get raw body
   //      to determine raw content size to get infer compression size
   return function (req, res, next) {
-    var reqReceived = new Date();
+    var agentResStartTime = new Date();
 
-    onFinished(res, function createEntry () {
-      var agentResStartTime = new Date();
+    var chunked = [];
+
+    var original = {
+      end: res.end,
+      write: res.write
+    };
+
+    // override node's http.ServerResponse.write method
+    res.write = function (chunk, encoding) {
+      // call the original http.ServerResponse.write method
+      original.write.call(res, chunk, encoding);
+
+      chunked.push(chunk);
+    };
+
+    // override node's http.ServerResponse.end method
+    res.end = function (data, encoding) {
+      // call the original http.ServerResponse.end method
+      original.end.call(res, data, encoding);
+
+      if (chunked.length) {
+        var data = Buffer.concat(chunked);
+      }
+
+      // construct body
+      var base64Body = data ? data.toString('utf8') : null;
+      var originalBodySize = data ? data.length : -1;
+
+      var reqReceived = new Date();
       var resHeaders = helpers.parseResponseHeaderString(res._header);
-      var resBodySize = helpers.getBodySize(resHeaders.headersArr);
+      var resBodySize = parseInt(helpers.getHeaderValue(resHeaders.headersArr, 'content-length', originalBodySize));
       var waitTime = agentResStartTime.getTime() - reqReceived.getTime();
       var protocol = req.connection.encrypted ? 'https' : 'http';
       var reqHeadersArr = helpers.objectToArray(req.headers);
@@ -111,7 +138,7 @@ module.exports = function Agent (serviceToken, options) {
           queryString: helpers.objectToArray(url.parse(req.url, true).query),
           headers: reqHeadersArr,
           headersSize: helpers.getReqHeaderSize(req),
-          bodySize: helpers.getBodySize(reqHeadersArr)
+          bodySize: helpers.getHeaderValue(reqHeadersArr, 'content-length', -1)
         },
 
         response: {
@@ -119,23 +146,17 @@ module.exports = function Agent (serviceToken, options) {
           statusText: resHeaders.statusText,
           httpVersion: resHeaders.version,
           headers: resHeaders.headersArr,
-          content: {
-            // TODO measure before compression
-            size: resBodySize,
-            mimeType: resHeaders.headersObj && resHeaders.headersObj['content-type']
-              ? resHeaders.headersObj['content-type']
-              : 'application/octet-stream'
-          },
-
-          redirectUrl: resHeaders.headersObj && resHeaders.headersObj.location
-            ? resHeaders.headersObj.location
-            : ''
-          ,
-
-          // res._header is a native node object
+          redirectUrl: helpers.getHeaderValue(resHeaders.headersArr, 'location', ''),
           headersSize: res._header ? new Buffer(res._header).length : -1,
-          bodySize: resBodySize
+          bodySize: resBodySize,
+          content: {
+            // TODO measure before compression, if any
+            size: resBodySize,
+            mimeType: helpers.getHeaderValue(resHeaders.headersArr, 'content-type', 'application/octet-stream'),
+            text: self.opts.sendBody ? base64Body : null
+          }
         },
+
         cache: {},
         timings: {
           send: 0, // TODO
@@ -154,7 +175,7 @@ module.exports = function Agent (serviceToken, options) {
 
       // send to queue
       self.queue.push(entry);
-    });
+    }
 
     if (typeof next === 'function') {
       next();

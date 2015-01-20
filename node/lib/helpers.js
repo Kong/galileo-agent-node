@@ -104,20 +104,21 @@ module.exports = {
   },
 
   /**
-   * uses the Content-Length header for body size
+   * uses regex to match a header value
    *
    * TODO fall back to manual measurement when Content-Length is not available
    */
-  getBodySize: function (headers) {
+  getHeaderValue: function (headers, key, def) {
     if (headers instanceof Array) {
+      var regex = new RegExp(key, 'i');
       for (var i in headers) {
-        if (/content-length/i.test(headers[i].name)) {
-          return parseInt(headers[i].value);
+        if (regex.test(headers[i].name)) {
+          return headers[i].value
         }
       }
     }
 
-    return -1;
+    return def !== undefined ? def : false;
   },
 
   /**

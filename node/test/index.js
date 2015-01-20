@@ -163,17 +163,22 @@ describe('Agent Middleware', function () {
         har.entries[0].request.should.have.property('bodySize').and.be.a.Number.and.equal(-1);
         har.entries[0].request.should.have.property('headers').and.be.a.Array.and.containEql({name: 'x-custom-header', value: 'foo'});
 
-        //console.log(har.entries[0].response);
         har.entries[0].should.have.property('response').and.be.an.Object;
         har.entries[0].response.should.have.property('status').and.equal(200);
         har.entries[0].response.should.have.property('statusText').and.equal('OK');
         har.entries[0].response.should.have.property('httpVersion').and.equal('HTTP/1.1');
         har.entries[0].response.should.have.property('headersSize').and.equal(129);
-        har.entries[0].response.should.have.property('bodySize').and.be.a.Number.and.equal(-1);
+        har.entries[0].response.should.have.property('bodySize').and.be.a.Number.and.equal(7);
         har.entries[0].response.should.have.property('headers').and.be.a.Array.and.containEql({name: 'Content-Type', value: 'text/plain'});
         har.entries[0].response.should.have.property('redirectUrl').and.equal('');
-        har.entries[0].should.have.property('cache');
-        har.entries[0].should.have.property('timings');
+
+        har.entries[0].response.should.have.property('content').and.be.an.Object;
+        har.entries[0].response.content.should.have.property('size').and.equal(7);
+        har.entries[0].response.content.should.have.property('mimeType').and.equal('text/plain');
+        har.entries[0].response.content.should.have.property('text').and.equal('Bonjour');
+
+        har.entries[0].should.have.property('cache').and.be.an.Object;
+        har.entries[0].should.have.property('timings').and.be.an.Object;
 
         done();
       });
@@ -181,7 +186,8 @@ describe('Agent Middleware', function () {
 
     // Create server and attach agent
     var analytics = agent(serviceToken, {
-      host: address
+      host: address,
+      sendBody: true
     });
 
     var server = http.createServer(function (req, res) {
