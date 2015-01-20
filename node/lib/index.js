@@ -111,44 +111,87 @@ module.exports = function Agent (serviceToken, options) {
   return function (req, res, next) {
     var agentResStartTime = new Date();
 
-    var chunked = [];
+    // body container
+    var bodies = {
+      req: {
+        size: -1,
+        base64: null
+      },
 
-    var original = {
+      res: {
+        size: -1,
+        base64: null
+      }
+    };
+
+    // buffer container
+    var chunked = {
+      req: [],
+      res: []
+    };
+
+    // store original methods for later use
+    var func = {
       end: res.end,
       write: res.write
     };
 
+    // grab the request body
+    req.on('data', function (chunk) {
+      chunked.req.push(chunk);
+    });
+
+    // construct the request body
+    req.on('end', function () {
+      var body = Buffer.concat(chunked.req);
+
+      bodies.req.size = body.length;
+      bodies.req.base64 = body.toString('utf8');
+
+      console.log(bodies.req.base64)
+    });
+
     // override node's http.ServerResponse.write method
     res.write = function (chunk, encoding) {
       // call the original http.ServerResponse.write method
-      original.write.call(res, chunk, encoding);
+      func.write.call(res, chunk, encoding);
 
-      chunked.push(chunk);
+      chunked.res.push(chunk);
     };
 
     // override node's http.ServerResponse.end method
     res.end = function (data, encoding) {
       // call the original http.ServerResponse.end method
-      original.end.call(res, data, encoding);
+      func.end.call(res, data, encoding);
 
       if (chunked.length) {
         data = Buffer.concat(chunked);
       }
 
       // construct body
-      var base64Body = data ? data.toString('utf8') : null;
-      var originalBodySize = data ? data.length : -1;
+      bodies.res.size = data ? data.length : -1;
+      bodies.res.base64 = data ? data.toString('utf8') : null;
 
       var reqReceived = new Date();
+      var reqHeadersArr = helpers.objectToArray(req.headers);
+
       var resHeaders = helpers.parseResponseHeaderString(res._header);
-      var resBodySize = parseInt(helpers.getHeaderValue(resHeaders.headersArr, 'content-length', originalBodySize));
+
+      var resContentLength = parseInt(helpers.getHeaderValue(resHeaders.headersArr, 'content-length', -1));
+      var resBodySize = ~[0, -1].indexOf(resContentLength) && bodies.res.size !== -1 ? bodies.res.size : resContentLength;
+
+      console.log(resContentLength, bodies.res.size, resBodySize)
+
+      var reqContentLength = parseInt(helpers.getHeaderValue(reqHeadersArr, 'content-length', -1));
+      var reqBodySize = ~[0, -1].indexOf(reqContentLength) && bodies.req.size !== -1 ? bodies.req.size : reqContentLength;
+
       var waitTime = agentResStartTime.getTime() - reqReceived.getTime();
       var protocol = req.connection.encrypted ? 'https' : 'http';
-      var reqHeadersArr = helpers.objectToArray(req.headers);
 
       var entry = {
         serverIPAddress: helpers.getServerAddress(),
         startedDateTime: agentResStartTime.toISOString(),
+
         request: {
           method: req.method,
           url: util.format('%s://%s%s', protocol, req.headers.host, req.url),
@@ -156,7 +199,12 @@ module.exports = function Agent (serviceToken, options) {
           queryString: helpers.objectToArray(url.parse(req.url, true).query),
           headers: reqHeadersArr,
           headersSize: helpers.getReqHeaderSize(req),
-          bodySize: helpers.getHeaderValue(reqHeadersArr, 'content-length', -1)
+          bodySize: reqBodySize,
+          content: {
+            size: reqBodySize,
+            mimeType: helpers.getHeaderValue(reqHeadersArr, 'content-type', 'application/octet-stream'),
+            text: self.opts.sendBody ? bodies.req.base64 : null
+          }
         },
 
         response: {
@@ -171,7 +219,7 @@ module.exports = function Agent (serviceToken, options) {
             // TODO measure before compression, if any
             size: resBodySize,
             mimeType: helpers.getHeaderValue(resHeaders.headersArr, 'content-type', 'application/octet-stream'),
-            text: self.opts.sendBody ? base64Body : null
+            text: self.opts.sendBody ? bodies.res.base64 : null
           }
         },
 
