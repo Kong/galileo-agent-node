@@ -215,7 +215,6 @@ module.exports = function Agent (serviceToken, options) {
           statusText: resHeaders.statusText,
           httpVersion: resHeaders.version,
           headers: resHeaders.headersArr,
-          redirectUrl: helpers.getHeaderValue(resHeaders.headersArr, 'location', ''),
           headersSize: res._header ? new Buffer(res._header).length : -1,
           bodySize: resBodySize,
           content: {
@@ -226,7 +225,6 @@ module.exports = function Agent (serviceToken, options) {
           }
         },
 
-        cache: {},
         timings: {
           send: 0, // TODO
           wait: waitTime,

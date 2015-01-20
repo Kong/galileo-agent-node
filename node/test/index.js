@@ -100,7 +100,7 @@ describe('Agent Middleware', function () {
     // Create server and attach agent
     var analytics = agent(serviceToken, {
       host: '127.0.0.1:' + port,
-      batch: 10
+      entriesPerHar: 10
     });
 
     webserver = http.createServer(function (req, res) {
@@ -160,14 +160,12 @@ describe('Agent Middleware', function () {
         // TODO fix response bodySize capture
         // har.entries[0].response.should.have.property('bodySize').and.be.a.Number.and.equal(7);
         har.entries[0].response.should.have.property('headers').and.be.a.Array.and.containEql({name: 'Content-Type', value: 'text/plain'});
-        har.entries[0].response.should.have.property('redirectUrl').and.equal('');
 
         har.entries[0].response.should.have.property('content').and.be.an.Object;
         har.entries[0].response.content.should.have.property('size').and.equal(7);
         har.entries[0].response.content.should.have.property('mimeType').and.equal('text/plain');
         har.entries[0].response.content.should.have.property('text').and.equal('Bonjour');
 
-        har.entries[0].should.have.property('cache').and.be.an.Object;
         har.entries[0].should.have.property('timings').and.be.an.Object;
 
         done();
