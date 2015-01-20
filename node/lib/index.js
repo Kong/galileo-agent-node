@@ -26,6 +26,7 @@ module.exports = function Agent (serviceToken, options) {
     host: 'socket.apianalytics.com:80',
     logger: debug,
     sendBody: false,
+    reqByteLimit: 1e10,
     batch: 1
   });
 
@@ -112,6 +113,8 @@ module.exports = function Agent (serviceToken, options) {
     var agentResStartTime = new Date();
 
     // body container
+    var bytes = 0;
+
     var bodies = {
       req: {
         size: -1,
@@ -138,7 +141,11 @@ module.exports = function Agent (serviceToken, options) {
 
     // grab the request body
     req.on('data', function (chunk) {
-      chunked.req.push(chunk);
+      bytes += chunk.length;
+
+      if (bytes <= self.opts.reqByteLimit) {
+        chunked.req.push(chunk);
+      }
     });
 
     // construct the request body
@@ -147,8 +154,6 @@ module.exports = function Agent (serviceToken, options) {
 
       bodies.req.size = body.length;
       bodies.req.base64 = body.toString('utf8');
-
-      console.log(bodies.req.base64)
     });
 
     // override node's http.ServerResponse.write method
@@ -164,8 +169,8 @@ module.exports = function Agent (serviceToken, options) {
       // call the original http.ServerResponse.end method
       func.end.call(res, data, encoding);
 
-      if (chunked.length) {
-        data = Buffer.concat(chunked);
+      if (chunked.res.length) {
+        data = Buffer.concat(chunked.res);
       }
 
       // construct body
@@ -179,8 +184,6 @@ module.exports = function Agent (serviceToken, options) {
 
       var resContentLength = parseInt(helpers.getHeaderValue(resHeaders.headersArr, 'content-length', -1));
       var resBodySize = ~[0, -1].indexOf(resContentLength) && bodies.res.size !== -1 ? bodies.res.size : resContentLength;
-
-      console.log(resContentLength, bodies.res.size, resBodySize)
 
       var reqContentLength = parseInt(helpers.getHeaderValue(reqHeadersArr, 'content-length', -1));
       var reqBodySize = ~[0, -1].indexOf(reqContentLength) && bodies.req.size !== -1 ? bodies.req.size : reqContentLength;
