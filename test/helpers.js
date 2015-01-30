@@ -50,6 +50,6 @@ describe('Helpers', function () {
   it('measures header message byte size', function () {
     var data = helpers.parseResponseHeaderString(fixture.headers.join('\r\n'));
 
-    helpers.getReqHeaderSize({headers: data.headersObj }).should.be.a.Number.and.equal(673);
+    helpers.getReqHeaderSize({headers: data.headersObj }).should.be.a.Number.and.equal(675);
   });
 });

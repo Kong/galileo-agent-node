@@ -25,7 +25,9 @@ describe('Agent Middleware', function () {
   });
 
   afterEach(function (done) {
-    webserver.close();
+    try {
+      webserver.close();
+    } catch (err) {}
 
     done();
   });
@@ -141,7 +143,7 @@ describe('Agent Middleware', function () {
         har.entries[0].request.should.have.property('url').and.equal('http://localhost/?foo=bar');
         har.entries[0].request.should.have.property('httpVersion').and.equal('HTTP/1.1');
         har.entries[0].request.should.have.property('queryString').and.be.Array.and.containEql({name: 'foo', value: 'bar'});
-        har.entries[0].request.should.have.property('headersSize').and.be.a.Number.and.equal(179);
+        har.entries[0].request.should.have.property('headersSize').and.be.a.Number.and.equal(168);
         har.entries[0].request.should.have.property('bodySize').and.be.a.Number.and.equal(13);
         har.entries[0].request.should.have.property('headers').and.be.a.Array.and.containEql({name: 'x-custom-header', value: 'foo'});
 
@@ -155,7 +157,7 @@ describe('Agent Middleware', function () {
         har.entries[0].response.should.have.property('status').and.equal(200);
         har.entries[0].response.should.have.property('statusText').and.equal('OK');
         har.entries[0].response.should.have.property('httpVersion').and.equal('HTTP/1.1');
-        har.entries[0].response.should.have.property('headersSize').and.equal(129);
+        har.entries[0].response.should.have.property('headersSize').and.equal(134);
         // TODO fix response bodySize capture
         // har.entries[0].response.should.have.property('bodySize').and.be.a.Number.and.equal(7);
         har.entries[0].response.should.have.property('headers').and.be.a.Array.and.containEql({name: 'Content-Type', value: 'text/plain'});
