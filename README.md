@@ -34,5 +34,4 @@ console.log("Server running at http://127.0.0.1:3000/");
 | Name            | Description                               | Default                                                   |
 | --------------- | ----------------------------------------- | --------------------------------------------------------- |
 | `logger`        | Customize the logging `function(message)` | Default uses [debug](https://www.npmjs.org/package/debug) |
-| `reqByteLimit`  | limit the request body capture size       | `1e10`                                                    |
 | `entriesPerHar` | num of entries per HAR object sent        | `1`                                                       |
