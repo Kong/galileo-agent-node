@@ -1,11 +1,11 @@
 # API Analytics Node.js Agent
 
-You can use this agent to intregrate API Analytics with node.js powered APIs. We have created [working examples](https://github.com/APIAnalytics/node-agent/tree/master/examples) of using it with standard HTTP, Express and Restify servers.
+You can use this agent to intregrate API Analytics with node.js powered APIs. We have created [working examples](https://github.com/mashape/analytics-node-agent/tree/master/examples) of using it with standard HTTP, Express and Restify servers.
 
 ## Installation
 
 ``` shell
-npm install apianalytics --save
+npm install mashape-analytics --save
 ```
 
 ## Usage
@@ -13,7 +13,7 @@ npm install apianalytics --save
 ``` js
 var http = require('http');
 
-var analytics = require('apianalytics');
+var analytics = require('mashape-analytics');
 var agent = analytics('SERVICE_TOKEN', {
   entriesPerHar: 1
 });

@@ -1,15 +1,17 @@
-var restify = require('restify');
-var analytics = require('apianalytics')
+'use strict'
 
-var server = restify.createServer();
+var restify = require('restify')
+var analytics = require('mashape-analytics')
 
-server.use(analytics('SERVICE_TOKEN'));
+var server = restify.createServer()
+
+server.use(analytics('SERVICE_TOKEN'))
 
 server.get('/api', function (req, res, next) {
-  res.send('Hello World!');
-  next();
-});
+  res.send('Hello World!')
+  next()
+})
 
-server.listen(3000, function() {
-  console.log('%s listening at %s', server.name, server.url);
-});
+server.listen(3000, function () {
+  console.log('%s listening at %s', server.name, server.url)
+})

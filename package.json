@@ -1,30 +1,54 @@
 {
-  "name": "apianalytics",
-  "version": "1.2.3",
-  "description": "Node Agent for API Analytics.",
-  "main": "./lib/index.js",
-  "scripts": {
-    "test": "mocha -R spec"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git@github.com:apianalytics/node-agent"
-  },
+  "version": "1.0.0",
+  "name": "mashape-analytics",
+  "description": "Node Agent for Mashape Analytics (https://analytics.mashape.com)",
+  "author": "Mashape Inc. <opensource@mashape.com> (https://www.mashape.com/)",
+  "homepage": "https://analytics.mashape.com",
+  "repository": "mashape/analytics-node-agent",
   "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/apianalytics/node-agent/issues"
+  "main": "lib/index",
+  "keywords": [
+    "agent",
+    "analytics",
+    "api",
+    "har",
+    "http",
+    "https",
+    "mashape"
+  ],
+  "engines": {
+    "node": ">=0.10"
   },
-  "homepage": "https://github.com/apianalytics/node-agent",
+  "files": [
+    "lib",
+    "LICENSE",
+    "README.md"
+  ],
+  "bugs": {
+    "url": "https://github.com/mashape/analytics-node-agent/issues"
+  },
+  "scripts": {
+    "pretest": "standard && echint",
+    "test": "mocha",
+
+    "coverage": "istanbul cover --dir coverage _mocha -- -R dot",
+    "codeclimate": "codeclimate < coverage/lcov.info"
+  },
   "devDependencies": {
-    "express": "^4.10.1",
-    "mocha": "^2.0.1",
-    "should": "^4.2.0",
-    "socket.io": "^1.2.0",
-    "unirest": "^0.4.0"
+    "codeclimate-test-reporter": "*",
+    "echint": "^1.3.0",
+    "express": "^4.13.0",
+    "istanbul": "^0.3.15",
+    "mocha": "^2.2.5",
+    "should": "^7.0.1",
+    "standard": "^4.3.1"
   },
   "dependencies": {
-    "async": "^0.9.0",
-    "debug": "^2.1.0",
-    "socket.io-client": "^1.2.0"
+    "async": "^1.2.1",
+    "debug-log": "^1.0.0",
+    "dotenv": "^1.2.0",
+    "stringify-clone": "^1.1.0",
+    "unirest": "^0.4.2",
+    "xtend": "^4.0.0"
   }
 }
