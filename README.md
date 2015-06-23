@@ -13,23 +13,29 @@ npm install mashape-analytics --save
 ``` js
 var http = require('http');
 
-var analytics = require('mashape-analytics');
+var analytics = require('mashape-analytics')
 var agent = analytics('SERVICE_TOKEN', {
-  entriesPerHar: 1
-});
+  limits: {
+    bodySize: 1e10
+  },
+  queue: {
+    entries: 10
+  }
+})
 
 var server = http.createServer(function (req, res) {
-  agent(req, res);
-  res.writeHead(200, {'Content-Type': 'text/plain'});
-  res.end('Hello World!');
-});
+  agent(req, res)
 
-server.listen(3000);
+  res.writeHead(200, {'Content-Type': 'text/plain'})
+  res.end('Hello World!')
+})
+
+server.listen(3000)
 ```
 
 ### Options
 
-| Name            | Description                               | Default                                                   |
-| --------------- | ----------------------------------------- | --------------------------------------------------------- |
-| `logger`        | Customize the logging `function(message)` | Default uses [debug](https://www.npmjs.org/package/debug) |
-| `entriesPerHar` | num of entries per HAR object sent        | `1`                                                       |
+| Name              | Description                                             | Default |
+| ----------------- | ------------------------------------------------------- | ------- |
+| `queue.entries`   | num of entries per ALF object sent                      | `100`   |
+| `limits.bodysize` | limit captured *request & response* body size in bytes  | `0`     |

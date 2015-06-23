@@ -4,7 +4,7 @@
   "description": "Node Agent for Mashape Analytics (https://analytics.mashape.com)",
   "author": "Mashape Inc. <opensource@mashape.com> (https://www.mashape.com/)",
   "homepage": "https://analytics.mashape.com",
-  "repository": "mashape/analytics-node-agent",
+  "repository": "Mashape/analytics-agent-node",
   "license": "MIT",
   "main": "lib/index",
   "keywords": [
@@ -25,12 +25,12 @@
     "README.md"
   ],
   "bugs": {
-    "url": "https://github.com/mashape/analytics-node-agent/issues"
+    "url": "https://github.com/Mashape/analytics-agent-node/issues"
   },
   "scripts": {
     "pretest": "standard && echint",
     "test": "mocha",
-
+    "posttest": "npm run coverage",
     "coverage": "istanbul cover --dir coverage _mocha -- -R dot",
     "codeclimate": "codeclimate < coverage/lcov.info"
   },

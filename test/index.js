@@ -27,7 +27,10 @@ describe('Agent Middleware', function () {
         // Attach agent
         app.use(agent(serviceToken, {
           host: 'localhost',
-          port: port
+          port: port,
+          queue: {
+            entries: 1
+          }
         }))
 
         // Setup a route
@@ -61,7 +64,10 @@ describe('Agent Middleware', function () {
       // create server
       var analytics = agent(serviceToken, {
         host: 'localhost',
-        port: port
+        port: port,
+        queue: {
+          entries: 1
+        }
       })
 
       var app = function (req, res) {
@@ -97,7 +103,9 @@ describe('Agent Middleware', function () {
       var analytics = agent(serviceToken, {
         host: 'localhost',
         port: port,
-        entriesPerHar: 10
+        queue: {
+          entries: 10
+        }
       })
 
       var app = function (req, res) {
@@ -136,7 +144,12 @@ describe('Agent Middleware', function () {
       var analytics = agent(serviceToken, {
         host: 'localhost',
         port: port,
-        sendBody: true
+        queue: {
+          entries: 1
+        },
+        limits: {
+          bodySize: 1e10
+        }
       })
 
       var app = function (req, res) {
