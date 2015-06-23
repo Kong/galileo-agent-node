@@ -1,6 +1,6 @@
 ## Mashape Analytics
 
-> for more information on Mashape Analytics, please visit [analytics.mashape.com](https://analytics.mashape.com)
+> for more information on Mashape Analytics, please visit [apianalytics.com](https://www.apianalytics.com)
 
 ## Installation
 
