@@ -1,6 +1,6 @@
-# API Analytics Node.js Agent
+## Mashape Analytics
 
-You can use this agent to intregrate API Analytics with node.js powered APIs. We have created [working examples](https://github.com/mashape/analytics-node-agent/tree/master/examples) of using it with standard HTTP, Express and Restify servers.
+> for more information on Mashape Analytics, please visit [analytics.mashape.com](https://analytics.mashape.com)
 
 ## Installation
 
@@ -32,6 +32,10 @@ var server = http.createServer(function (req, res) {
 
 server.listen(3000)
 ```
+
+### Examples
+You can use this agent to intregrate Mashape Analytics with Node.js powered APIs & Microservices. We have created a [working examples](https://github.com/Mashape/analytics-agent-node/tree/master/examples) of using it with standard HTTP, Express and Restify servers.
+
 
 ### Options
 
