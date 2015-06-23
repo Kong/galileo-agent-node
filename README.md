@@ -4,7 +4,7 @@
 
 ## Installation
 
-``` shell
+``` sh
 npm install mashape-analytics --save
 ```
 
