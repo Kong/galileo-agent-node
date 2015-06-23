@@ -14,7 +14,7 @@ npm install mashape-analytics --save
 var http = require('http');
 
 var analytics = require('mashape-analytics')
-var agent = analytics('SERVICE_TOKEN', {
+var agent = analytics('SERVICE_TOKEN', 'ENVIRONMENT_NAME', {
   limits: {
     bodySize: 1e10
   },
