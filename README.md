@@ -66,4 +66,4 @@ analytics('SERVICE_TOKEN', 'PRODUCTION', {
 
 Copyright Mashape Inc, 2015.
 
-Licensed under [the MIT License](https://github.com/mashape/analytics-agent-java/blob/master/LICENSE)
+Licensed under [the MIT License](https://github.com/Mashape/analytics-agent-node/blob/master/LICENSE)
