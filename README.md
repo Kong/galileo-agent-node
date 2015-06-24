@@ -61,3 +61,9 @@ analytics('SERVICE_TOKEN', 'PRODUCTION', {
 - [HTTP](https://github.com/Mashape/analytics-agent-node/blob/master/examples/http.js)
 - [Express.js](https://github.com/Mashape/analytics-agent-node/blob/master/examples/express.js)
 - [Restify](https://github.com/Mashape/analytics-agent-node/blob/master/examples/restify.js)
+
+## Copyright and license
+
+Copyright Mashape Inc, 2015.
+
+Licensed under [the MIT License][license].
