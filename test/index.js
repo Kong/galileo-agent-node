@@ -28,9 +28,7 @@ describe('Agent Middleware', function () {
         app.use(agent(serviceToken, {
           host: 'localhost',
           port: port,
-          queue: {
-            entries: 1
-          }
+          queueEntries: 1
         }))
 
         // Setup a route
@@ -65,9 +63,7 @@ describe('Agent Middleware', function () {
       var analytics = agent(serviceToken, {
         host: 'localhost',
         port: port,
-        queue: {
-          entries: 1
-        }
+        queueEntries: 1
       })
 
       var app = function (req, res) {
@@ -88,6 +84,8 @@ describe('Agent Middleware', function () {
 
     // actual test
     echo(setup, function test (body) {
+      debug('WTF')
+
       body.should.be.an.Object
       body.should.have.property('serviceToken').and.equal(serviceToken)
 
@@ -103,9 +101,7 @@ describe('Agent Middleware', function () {
       var analytics = agent(serviceToken, {
         host: 'localhost',
         port: port,
-        queue: {
-          entries: 10
-        }
+        queueEntries: 10
       })
 
       var app = function (req, res) {
@@ -144,12 +140,8 @@ describe('Agent Middleware', function () {
       var analytics = agent(serviceToken, {
         host: 'localhost',
         port: port,
-        queue: {
-          entries: 1
-        },
-        limits: {
-          bodySize: 1e10
-        }
+        queueEntries: 1,
+        maxBodySize: 1e10
       })
 
       var app = function (req, res) {
@@ -222,6 +214,44 @@ describe('Agent Middleware', function () {
       har.entries[0].response.content.should.have.property('text').and.equal('Bonjour')
 
       har.entries[0].should.have.property('timings').and.be.an.Object
+
+      done()
+    })
+  })
+
+  it('should trigger timeout', function (done) {
+    var setup = function (port) {
+      debug('echo server started on port %s', port)
+
+      // create server
+      var analytics = agent(serviceToken, {
+        host: 'localhost',
+        port: port,
+        queueEntries: 10
+      })
+
+      var app = function (req, res) {
+        analytics(req, res)
+
+        res.writeHead(200, {'Content-Type': 'text/plain'})
+        res.write('Bonjour')
+        res.end()
+      }
+
+      server(app, function (port) {
+        debug('http server started on port %s', port)
+
+        // send a request
+        unirest.get('http://localhost:' + port).end()
+      })
+    }
+
+    // actual test
+    echo(setup, function test (body) {
+      debug('WTF')
+
+      body.should.be.an.Object
+      body.should.have.property('serviceToken').and.equal(serviceToken)
 
       done()
     })
