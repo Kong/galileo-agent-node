@@ -3,13 +3,12 @@
 'use strict'
 
 var agent = require('../lib')
-var express = require('express')
 var debug = require('debug-log')('mashape-analytics-test')
-var server = require('./helpers/server')
 var echo = require('./helpers/echo')
+var express = require('express')
 var pkg = require('../package')
+var server = require('./helpers/server')
 var unirest = require('unirest')
-// var util = require('util')
 
 require('should')
 
@@ -28,6 +27,7 @@ describe('Agent Middleware', function () {
         app.use(agent(serviceToken, {
           host: 'localhost',
           port: port,
+          ssl: false,
           queue: {
             entries: 1
           }
@@ -65,6 +65,7 @@ describe('Agent Middleware', function () {
       var analytics = agent(serviceToken, {
         host: 'localhost',
         port: port,
+        ssl: false,
         queue: {
           entries: 1
         }
@@ -103,6 +104,7 @@ describe('Agent Middleware', function () {
       var analytics = agent(serviceToken, {
         host: 'localhost',
         port: port,
+        ssl: false,
         queue: {
           entries: 10
         }
@@ -144,6 +146,7 @@ describe('Agent Middleware', function () {
       var analytics = agent(serviceToken, {
         host: 'localhost',
         port: port,
+        ssl: false,
         queue: {
           entries: 1
         },
