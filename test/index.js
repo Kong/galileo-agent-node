@@ -226,4 +226,43 @@ describe('Agent Middleware', function () {
       done()
     })
   })
+
+  it('should trigger timeout', function (done) {
+    var setup = function (port) {
+      debug('echo server started on port %s', port)
+
+      // create server
+      var analytics = agent(serviceToken, {
+        host: 'localhost',
+        port: port,
+        queue: {
+          entries: 10
+        },
+        queueTimeout: 100
+      })
+
+      var app = function (req, res) {
+        analytics(req, res)
+
+        res.writeHead(200, {'Content-Type': 'text/plain'})
+        res.write('Bonjour')
+        res.end()
+      }
+
+      server(app, function (port) {
+        debug('http server started on port %s', port)
+
+        // send a request
+        unirest.get('http://localhost:' + port).end()
+      })
+    }
+
+    // actual test
+    echo(setup, function test (body) {
+      body.should.be.an.Object
+      body.should.have.property('serviceToken').and.equal(serviceToken)
+
+      done()
+    })
+  })
 })
