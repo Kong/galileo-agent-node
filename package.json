@@ -1,5 +1,5 @@
 {
-  "version": "1.1.5",
+  "version": "2.0.0",
   "name": "galileo-agent",
   "description": "Node Agent for Galileo (https://getgalileo.io)",
   "author": "Mashape Inc. <opensource@mashape.com> (https://www.mashape.com/)",
