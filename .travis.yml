@@ -6,6 +6,8 @@ node_js:
  - iojs
  - 0.10
  - 0.12
+ - 4
+ - 5
 
 cache:
   directories:
