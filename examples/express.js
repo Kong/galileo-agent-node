@@ -1,11 +1,11 @@
 'use strict'
 
 var express = require('express')
-var analytics = require('mashape-analytics')
+var galileo = require('galileo-agent')
 
 var app = express()
 
-app.use(analytics('SERVICE_TOKEN'))
+app.use(galileo('SERVICE_TOKEN'))
 
 app.get('/api', function (req, res) {
   res.send('Hello World!')
