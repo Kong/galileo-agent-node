@@ -230,7 +230,7 @@ describe('Agent Middleware', function () {
         har.entries[0].response.should.have.property('headers').and.be.an.Array().and.containEql({name: 'Content-Type', value: 'text/plain'})
 
         har.entries[0].response.should.have.property('content').and.be.an.Object
-        har.entries[0].response.content.should.have.property('text').and.equal('Bonjour')
+        har.entries[0].response.content.should.have.property('text').and.equal('Qm9uam91cg==') // Base64 of 'Bonjour'
 
         har.entries[0].should.have.property('timings').and.be.an.Object
         done()
