@@ -201,7 +201,6 @@ describe('Agent Middleware', function () {
         har.should.have.property('entries').and.be.an.Array().with.lengthOf(1)
 
         har.entries[0].should.have.property('serverIPAddress').and.be.a.String
-        har.entries[0].should.have.property('clientIPAddress').and.be.a.String
         har.entries[0].should.have.property('startedDateTime').and.be.a.String
 
         har.entries[0].should.have.property('request').and.be.an.Object
@@ -235,6 +234,7 @@ describe('Agent Middleware', function () {
         har.entries[0].should.have.property('timings').and.be.an.Object
         done()
       }).catch(function (err) {
+        err.message = 'ALF Validator Error: ' + JSON.stringify(err, null, ' ')
         done(err)
       })
     })
