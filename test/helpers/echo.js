@@ -10,8 +10,17 @@ module.exports = function (next, done) {
       body += chunk
     })
 
+    req.on('error', function (err) {
+      console.log('error thrown on req', err)
+    })
     req.on('end', function () {
-      done(JSON.parse(body))
+      console.log('collector server got request!', body)
+      try {
+        body = JSON.parse(body)
+      } catch(e) {
+        console.log('an error occurred while parsing body', body)
+      }
+      done(body)
     })
   }, next)
 }

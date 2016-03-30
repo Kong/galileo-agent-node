@@ -56,4 +56,10 @@ describe('Helpers', function () {
 
     helpers.getReqHeaderSize({headers: data.headersObj }).should.be.a.Number().and.equal(675)
   })
+
+  it('should create a new array with only unique values', function () {
+    var data = helpers.uniq([1, 1, 5, 4, 'this', 'this', 'that'])
+
+    data.should.be.an.Array().and.deepEqual([1, 5, 4, 'this', 'that'])
+  })
 })

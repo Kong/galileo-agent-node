@@ -46,7 +46,9 @@ describe('Agent Middleware', function () {
           debug('express server started on port %s', port)
 
           // send a request
-          unirest.get('http://localhost:' + port).end()
+          unirest.get('http://localhost:' + port).end(function (results) {
+            if (results.error) console.log(results.error)
+          })
         })
       }
 
@@ -88,7 +90,9 @@ describe('Agent Middleware', function () {
         debug('http server started on port %s', port)
 
         // send a request
-        unirest.get('http://localhost:' + port).end()
+        unirest.get('http://localhost:' + port).end(function (results) {
+          if (results.error) console.log(results.error)
+        })
       })
     }
 
@@ -132,7 +136,9 @@ describe('Agent Middleware', function () {
         var i = 10
 
         while (i--) {
-          unirest.get('http://localhost:' + port).end()
+          unirest.get('http://localhost:' + port).end(function (results) {
+            if (results.error) console.log(results.error)
+          })
         }
       })
     }
@@ -145,9 +151,9 @@ describe('Agent Middleware', function () {
     })
   })
 
-  it('should convert http server req, res to HAR', function (done) {
+  it('should convert http server req, res to ALF', function (done) {
     var setup = function (port) {
-      debug('echo server started on port %s', port)
+      debug('collector echo server started on port %s', port)
 
       // create server
       var analytics = agent(serviceToken, {
@@ -167,14 +173,14 @@ describe('Agent Middleware', function () {
 
       var app = function (req, res) {
         analytics(req, res)
-
+        console.log('agent server is responding')
         res.writeHead(200, {'Content-Type': 'text/plain'})
         res.write('Bonjour')
         res.end()
       }
 
       server(app, function (port) {
-        debug('http server started on port %s', port)
+        debug('agent http server started on port %s', port)
 
         // send a request
         unirest.post('http://localhost:' + port)
@@ -183,13 +189,19 @@ describe('Agent Middleware', function () {
           .send({foo: 'bar'})
           .header('host', 'localhost')
           .header('X-Custom-Header', 'foo')
-          .end()
+          .end(function (results) {
+            if (results.error) console.log(results.error)
+          })
       })
     }
 
     // actual test
     echo(setup, function test (body) {
+      debug('actual alf test starting')
+
       alfValidator(body, '1.1.0').then(function () {
+        debug('valid alf. Running specific content tests')
+
         var har = body.har.log
 
         har.should.be.an.Object
@@ -232,8 +244,11 @@ describe('Agent Middleware', function () {
         har.entries[0].response.content.should.have.property('text').and.equal('Qm9uam91cg==') // Base64 of 'Bonjour'
 
         har.entries[0].should.have.property('timings').and.be.an.Object
+        debug('finished content tests')
         done()
       }).catch(function (err) {
+        debug('The alf submitted is not valid.', err.toString())
+
         err.message = 'ALF Validator Error: ' + JSON.stringify(err, null, ' ')
         done(err)
       })
