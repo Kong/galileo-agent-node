@@ -40,8 +40,7 @@
   "scripts": {
     "pretest": "standard && echint",
     "test": "tap test/*.tap.js",
-    "posttest": "npm run coverage",
-    "coverage": "istanbul cover test/*.tap.js",
+    "coverage": "tap test/*.tap.js --cov --coverage-report=html",
     "codeclimate": "codeclimate < coverage/lcov.info"
   },
   "devDependencies": {

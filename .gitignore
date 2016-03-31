@@ -4,3 +4,5 @@ coverage
 node_modules
 !.env.example
 tester.js
+.nyc_output
+.DS_Store

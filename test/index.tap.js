@@ -1,7 +1,7 @@
 'use strict'
 var tap = require('tap')
 
-var galileo = require('../lib')
+var Galileo = require('../lib')
 var debug = require('debug-log')('galileo-test')
 var express = require('express')
 var bodyParser = require('body-parser')
@@ -26,8 +26,21 @@ collector.use(bodyParser.urlencoded({ extended: true }))
 collector.post('/', collectorResponse)
 collector.post('/:status', collectorResponse)
 function collectorResponse (req, res, next) {
+  console.log('collector pinged!')
   var responseStatus = req.params.status || 200
+
+  var trigger
+  if (responseStatus === 'delay') {
+    trigger = responseStatus
+    responseStatus = 200
+  }
   ee.emit('collector-response', {status: responseStatus, data: req.body})
+  if (trigger === 'delay') {
+    console.log('delaying collector response')
+    return setTimeout(function () {
+      res.sendStatus(responseStatus)
+    }, 2000)
+  }
   res.sendStatus(responseStatus)
 }
 var listeningCollector = collector.listen(function () {
@@ -67,7 +80,7 @@ ee.on('collector-started', function () {
 })
 
 ee.on('collector-started', function () {
-  var workingGalileo = galileo(serviceToken, 'default-environment', {
+  var workingGalileo = new Galileo(serviceToken, 'default-environment', {
     logBody: true, // LOG_BODY agent spec
     failLog: './test/test-fail-logs', // FAIL_LOG agent spec
     failLogName: 'galileo-agent-errors.log', // FAIL_LOG agent spec
@@ -76,7 +89,7 @@ ee.on('collector-started', function () {
       retry: 5, // RETRY_COUNT agent spec
       retryTime: 1,
       flush: 5, // seconds, FLUSH_TIMEOUT agent spec
-      connection: 4 // seconds, CONNECTION_TIMEOUT agent spec
+      connection: 1 // seconds, CONNECTION_TIMEOUT agent spec
     },
     queue: { // QUEUE_SIZE agent spec
       batch: 1, // number in a batch, if >1 switches path; `single` to `batch`
@@ -95,6 +108,11 @@ ee.on('collector-started', function () {
     workingGalileo(req, res)
     debug(req.url)
     var responseStatus = req.url.split('/')
+    var trigger
+    if (responseStatus[1] === 'content-length-zero') {
+      trigger = responseStatus[1]
+      responseStatus = []
+    }
     responseStatus = responseStatus[1] || 200
     responseStatus = parseInt(responseStatus, 10)
     var chunks = []
@@ -104,7 +122,11 @@ ee.on('collector-started', function () {
     req.on('end', function () {
       ee.emit('agentServer.http.working-response', {status: responseStatus, data: chunks})
     })
-    res.writeHead(responseStatus, {'Content-Type': 'text/plain'})
+    var headers = {'Content-Type': 'text/plain'}
+    if (trigger === 'content-length-zero') {
+      headers['Content-Length'] = 0
+    }
+    res.writeHead(responseStatus, headers)
     res.end('Hello World!')
   }
   agentServer.http.working = http.createServer(agentServer.http.workingResponse)
@@ -121,7 +143,28 @@ ee.on('collector-started', function () {
   agentServer.express.working.use(workingGalileo)
   agentServer.express.workingResponse = function (req, res, next) {
     var responseStatus = req.params.status || 200
+    var trigger
+    if (responseStatus === 'delay') {
+      trigger = responseStatus
+      responseStatus = 200
+    }
+    if (responseStatus === 'content-length-zero') {
+      trigger = responseStatus
+      responseStatus = 200
+    }
+    responseStatus = responseStatus === 'noresponse' ? 200 : responseStatus
     ee.emit('agentServer.express.working-response', {status: responseStatus, data: req.body})
+    if (req.params.status === 'noresponse') {
+      return res.send('')
+    }
+    if (trigger === 'content-length-zero') {
+      res.setHeader('Content-Length', 0)
+    }
+    if (trigger === 'delay') {
+      return setTimeout(function () {
+        res.sendStatus(responseStatus)
+      }, 2000)
+    }
     res.sendStatus(responseStatus)
   }
   agentServer.express.working.get('/', agentServer.express.workingResponse)
@@ -217,7 +260,7 @@ ee.on('collector-started', function () {
     }
   })
   tap.test('should allow setting no environment', function (t) {
-    var noEnvGalileo = galileo(serviceToken, {
+    var noEnvGalileo = new Galileo(serviceToken, {
       logBody: true, // LOG_BODY agent spec
       failLog: './test/test-fail-logs', // FAIL_LOG agent spec
       failLogName: 'galileo-agent-errors.log', // FAIL_LOG agent spec
@@ -297,39 +340,210 @@ ee.on('collector-started', function () {
       ee.emit('agentServer.express.adhoc.noEnv.app-started')
     })
   })
-  tap.test("should set response BodySize to 0 if data isn't present", function (t) {
-    var bodyZeroCollectorResponse = function (data) {
-      console.log(JSON.stringify(data.data.har.log.entries[0].response, null, ' '))
-      t.ok(data.data.har.log.entries[0].response.bodySize === 2)
+  tap.test("should set request BodySize to 0 if data isn't present", function (t) {
+    var reqBodyZeroCollectorResponse = function (data) {
+      t.ok(data.data.har.log.entries[0].request.bodySize === 0)
+      ee.removeListener('collector-response', reqBodyZeroCollectorResponse)
+      ee.removeListener('agentServer.express.working-started', reqBodyZeroExpressReady)
       t.end()
     }
-    var bodyZeroExpressReady = function () {
-      ee.on('collector-response', bodyZeroCollectorResponse)
+    var reqBodyZeroExpressReady = function () {
+      ee.on('collector-response', reqBodyZeroCollectorResponse)
       var workingUrl = 'http://localhost:' + agentServer.express.workingPort
       debug(workingUrl)
       // unirest.get(workingUrl)
       request({
-        method: 'POST',
+        method: 'GET',
         uri: workingUrl,
         headers: {
           'User-Agent': 'request',
           'Content-Type': 'application/www-url-formencoded'
         }
       }, function (err, results) {
-        debug('bodyZero was sent!', err)
+        debug('reqBodyZero was sent!', err)
       })
     }
     if (!agentServer.express.workingReady) {
-      ee.on('agentServer.express.working-started', bodyZeroExpressReady)
+      ee.on('agentServer.express.working-started', reqBodyZeroExpressReady)
     } else {
-      bodyZeroExpressReady()
+      reqBodyZeroExpressReady()
     }
   })
-
+  // tap.test("should set response BodySize to 0 if data isn't returned", function (t) {
+  //   var resBodyZeroCollectorResponse = function (data) {
+  //     t.ok(data.data.har.log.entries[0].response.bodySize === 0)
+  //     ee.removeListener('collector-response', resBodyZeroCollectorResponse)
+  //     ee.removeListener('agentServer.express.working-started', resBodyZeroExpressReady)
+  //     t.end()
+  //   }
+  //   var resBodyZeroExpressReady = function () {
+  //     ee.on('collector-response', resBodyZeroCollectorResponse)
+  //     var workingUrl = 'http://localhost:' + agentServer.express.workingPort + '/noresponse'
+  //     debug(workingUrl)
+  //     // unirest.get(workingUrl)
+  //     request({
+  //       method: 'GET',
+  //       uri: workingUrl,
+  //       headers: {
+  //         'User-Agent': 'request',
+  //         'Content-Type': 'application/www-url-formencoded'
+  //       }
+  //     }, function (err, results) {
+  //       debug('resBodyZero was sent!', err)
+  //     })
+  //   }
+  //   if (!agentServer.express.workingReady) {
+  //     ee.on('agentServer.express.working-started', resBodyZeroExpressReady)
+  //   } else {
+  //     resBodyZeroExpressReady()
+  //   }
+  // })
   // Fail tests
+  // tap.test('should write request to disk if server refuses connection', function (t) {
+  //   var deadServerGalileo = new Galileo(serviceToken, {
+  //     logBody: true, // LOG_BODY agent spec
+  //     failLog: './test/test-fail-logs', // FAIL_LOG agent spec
+  //     failLogName: 'galileo-agent-errors.log', // FAIL_LOG agent spec
+  //     limits: {
+  //       bodySize: 1000, // bytes
+  //       retry: 5, // RETRY_COUNT agent spec
+  //       retryTime: 1,
+  //       flush: 5, // seconds, FLUSH_TIMEOUT agent spec
+  //       connection: 4 // seconds, CONNECTION_TIMEOUT agent spec
+  //     },
+  //     queue: { // QUEUE_SIZE agent spec
+  //       batch: 1, // number in a batch, if >1 switches path; `single` to `batch`
+  //       entries: 1 // number of entries per ALF record
+  //     },
+  //     collector: {
+  //       host: 'localhost', // HOST agent spec
+  //       port: collectorPort - 1, // PORT agent spec
+  //       path: '/',
+  //       ssl: false
+  //     }
+  //   })
+  //   agentServer.express.adhoc.deadServer = {}
+  //   agentServer.express.adhoc.deadServer.app = express()
+  //   agentServer.express.adhoc.deadServer.app.use(bodyParser.json())
+  //   agentServer.express.adhoc.deadServer.app.use(bodyParser.urlencoded({ extended: true }))
+  //   agentServer.express.adhoc.deadServer.app.use(deadServerGalileo)
+  //   agentServer.express.adhoc.deadServer.appResponse = function (req, res, next) {
+  //     var responseStatus = req.params.status || 200
+  //     ee.emit('agentServer.express.adhoc.deadServer.app-response', {status: responseStatus, data: req.body})
+  //     res.sendStatus(responseStatus)
+  //   }
+  //   agentServer.express.adhoc.deadServer.app.get('/', agentServer.express.adhoc.deadServer.appResponse)
+  //   agentServer.express.adhoc.deadServer.app.post('/', agentServer.express.adhoc.deadServer.appResponse)
+  //   agentServer.express.adhoc.deadServer.app.get('/:status', agentServer.express.adhoc.deadServer.appResponse)
+  //   agentServer.express.adhoc.deadServer.app.post('/:status', agentServer.express.adhoc.deadServer.appResponse)
+  //   var deadServerExpressReady = function () {
+  //     var workingUrl = 'http://localhost:' + agentServer.express.adhoc.deadServer.appPort
+  //     debug(workingUrl)
+  //     request({
+  //       method: 'GET',
+  //       uri: workingUrl,
+  //       headers: {
+  //         'User-Agent': 'request',
+  //         'Content-Type': 'application/www-url-formencoded'
+  //       }
+  //     }, function (err, results) {
+  //       debug('deadServer was sent!', err)
+  //
+  //       // check fail log
+  //
+  //       ee.removeListener('agentServer.express.adhoc.deadServer.app-started', deadServerExpressReady)
+  //       ee.emit('deadServer-test-complete')
+  //     })
+  //   }
+  //   ee.on('agentServer.express.adhoc.deadServer.app-started', deadServerExpressReady)
+  //   ee.on('deadServer-test-complete', function () {
+  //     debug('closing noenv server')
+  //     agentServer.express.adhoc.deadServer.appListening.close()
+  //     agentServer.express.adhoc.deadServer = {}
+  //     t.end()
+  //   })
+  //   agentServer.express.adhoc.deadServer.appListening = agentServer.express.adhoc.deadServer.app.listen(function () {
+  //     agentServer.express.adhoc.deadServer.appPort = agentServer.express.adhoc.deadServer.appListening.address().port
+  //     ee.emit('agentServer.express.adhoc.deadServer.app-started')
+  //   })
+  // })
+
+  tap.test("should write request to disk if server doesn't respond within connection limit", function (t) {
+    var slowServerGalileo = new Galileo(serviceToken, {
+      logBody: true, // LOG_BODY agent spec
+      failLog: './test/test-fail-logs', // FAIL_LOG agent spec
+      failLogName: 'galileo-agent-errors.log', // FAIL_LOG agent spec
+      limits: {
+        bodySize: 1000, // bytes
+        retry: 5, // RETRY_COUNT agent spec
+        retryTime: 1, // seconds, in between retries
+        flush: 5, // seconds, FLUSH_TIMEOUT agent spec
+        connection: 1 // seconds, CONNECTION_TIMEOUT agent spec
+      },
+      queue: { // QUEUE_SIZE agent spec
+        batch: 1, // number in a batch, if >1 switches path; `single` to `batch`
+        entries: 1 // number of entries per ALF record
+      },
+      collector: {
+        host: 'localhost', // HOST agent spec
+        port: collectorPort, // PORT agent spec
+        path: '/',
+        ssl: false
+      }
+    })
+    agentServer.express.adhoc.slowServer = {}
+    agentServer.express.adhoc.slowServer.app = express()
+    agentServer.express.adhoc.slowServer.app.use(bodyParser.json())
+    agentServer.express.adhoc.slowServer.app.use(bodyParser.urlencoded({ extended: true }))
+    agentServer.express.adhoc.slowServer.app.use(slowServerGalileo)
+    agentServer.express.adhoc.slowServer.appResponse = function (req, res, next) {
+      var responseStatus = req.params.status || 200
+      ee.emit('agentServer.express.adhoc.slowServer.app-response', {status: responseStatus, data: req.body})
+      res.sendStatus(responseStatus)
+    }
+    agentServer.express.adhoc.slowServer.app.get('/', agentServer.express.adhoc.slowServer.appResponse)
+    agentServer.express.adhoc.slowServer.app.post('/', agentServer.express.adhoc.slowServer.appResponse)
+    agentServer.express.adhoc.slowServer.app.get('/:status', agentServer.express.adhoc.slowServer.appResponse)
+    agentServer.express.adhoc.slowServer.app.post('/:status', agentServer.express.adhoc.slowServer.appResponse)
+    var slowServerCollectorResponse = function (data) {
+      console.log('collector responded')
+    }
+    var slowServerExpressReady = function () {
+      ee.on('collector-response', slowServerCollectorResponse)
+      var workingUrl = 'http://localhost:' + agentServer.express.adhoc.slowServer.appPort
+      debug(workingUrl)
+      request({
+        method: 'GET',
+        uri: workingUrl,
+        headers: {
+          'User-Agent': 'request',
+          'Content-Type': 'application/www-url-formencoded'
+        }
+      }, function (err, results) {
+        debug('slowServer was sent!', err)
+
+        // check fail log
+
+        ee.removeListener('agentServer.express.adhoc.slowServer.app-started', slowServerExpressReady)
+        ee.emit('slowServer-test-complete')
+      })
+    }
+    ee.on('agentServer.express.adhoc.slowServer.app-started', slowServerExpressReady)
+    ee.on('slowServer-test-complete', function () {
+      debug('closing noenv server')
+      agentServer.express.adhoc.slowServer.appListening.close()
+      agentServer.express.adhoc.slowServer = {}
+      t.end()
+    })
+    agentServer.express.adhoc.slowServer.appListening = agentServer.express.adhoc.slowServer.app.listen(function () {
+      agentServer.express.adhoc.slowServer.appPort = agentServer.express.adhoc.slowServer.appListening.address().port
+      ee.emit('agentServer.express.adhoc.slowServer.app-started')
+    })
+  })
+
   tap.test('should fail if serviceToken is not provided', function (t) {
     try {
-      var failGalileo = galileo()
+      var failGalileo = new Galileo()
       failGalileo({}, {})
       t.fail('Did not throw error when serviceToken is absent')
       t.end()
