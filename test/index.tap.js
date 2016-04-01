@@ -26,7 +26,6 @@ collector.use(bodyParser.urlencoded({ extended: true }))
 collector.post('/', collectorResponse)
 collector.post('/:status', collectorResponse)
 function collectorResponse (req, res, next) {
-  console.log('collector pinged!')
   var responseStatus = req.params.status || 200
 
   var trigger
@@ -36,7 +35,6 @@ function collectorResponse (req, res, next) {
   }
   ee.emit('collector-response', {status: responseStatus, data: req.body})
   if (trigger === 'delay') {
-    console.log('delaying collector response')
     return setTimeout(function () {
       res.sendStatus(responseStatus)
     }, 2000)
@@ -369,116 +367,47 @@ ee.on('collector-started', function () {
       reqBodyZeroExpressReady()
     }
   })
-  // tap.test("should set response BodySize to 0 if data isn't returned", function (t) {
-  //   var resBodyZeroCollectorResponse = function (data) {
-  //     t.ok(data.data.har.log.entries[0].response.bodySize === 0)
-  //     ee.removeListener('collector-response', resBodyZeroCollectorResponse)
-  //     ee.removeListener('agentServer.express.working-started', resBodyZeroExpressReady)
-  //     t.end()
-  //   }
-  //   var resBodyZeroExpressReady = function () {
-  //     ee.on('collector-response', resBodyZeroCollectorResponse)
-  //     var workingUrl = 'http://localhost:' + agentServer.express.workingPort + '/noresponse'
-  //     debug(workingUrl)
-  //     // unirest.get(workingUrl)
-  //     request({
-  //       method: 'GET',
-  //       uri: workingUrl,
-  //       headers: {
-  //         'User-Agent': 'request',
-  //         'Content-Type': 'application/www-url-formencoded'
-  //       }
-  //     }, function (err, results) {
-  //       debug('resBodyZero was sent!', err)
-  //     })
-  //   }
-  //   if (!agentServer.express.workingReady) {
-  //     ee.on('agentServer.express.working-started', resBodyZeroExpressReady)
-  //   } else {
-  //     resBodyZeroExpressReady()
-  //   }
-  // })
+  tap.test("should set response BodySize to 0 if data isn't returned", function (t) {
+    var resBodyZeroCollectorResponse = function (data) {
+      t.ok(data.data.har.log.entries[0].response.bodySize === 0)
+      ee.removeListener('collector-response', resBodyZeroCollectorResponse)
+      ee.removeListener('agentServer.express.working-started', resBodyZeroExpressReady)
+      t.end()
+    }
+    var resBodyZeroExpressReady = function () {
+      ee.on('collector-response', resBodyZeroCollectorResponse)
+      var workingUrl = 'http://localhost:' + agentServer.express.workingPort + '/noresponse'
+      debug(workingUrl)
+      // unirest.get(workingUrl)
+      request({
+        method: 'GET',
+        uri: workingUrl,
+        headers: {
+          'User-Agent': 'request',
+          'Content-Type': 'application/www-url-formencoded'
+        }
+      }, function (err, results) {
+        debug('resBodyZero was sent!', err)
+      })
+    }
+    if (!agentServer.express.workingReady) {
+      ee.on('agentServer.express.working-started', resBodyZeroExpressReady)
+    } else {
+      resBodyZeroExpressReady()
+    }
+  })
   // Fail tests
-  // tap.test('should write request to disk if server refuses connection', function (t) {
-  //   var deadServerGalileo = new Galileo(serviceToken, {
-  //     logBody: true, // LOG_BODY agent spec
-  //     failLog: './test/test-fail-logs', // FAIL_LOG agent spec
-  //     failLogName: 'galileo-agent-errors.log', // FAIL_LOG agent spec
-  //     limits: {
-  //       bodySize: 1000, // bytes
-  //       retry: 5, // RETRY_COUNT agent spec
-  //       retryTime: 1,
-  //       flush: 5, // seconds, FLUSH_TIMEOUT agent spec
-  //       connection: 4 // seconds, CONNECTION_TIMEOUT agent spec
-  //     },
-  //     queue: { // QUEUE_SIZE agent spec
-  //       batch: 1, // number in a batch, if >1 switches path; `single` to `batch`
-  //       entries: 1 // number of entries per ALF record
-  //     },
-  //     collector: {
-  //       host: 'localhost', // HOST agent spec
-  //       port: collectorPort - 1, // PORT agent spec
-  //       path: '/',
-  //       ssl: false
-  //     }
-  //   })
-  //   agentServer.express.adhoc.deadServer = {}
-  //   agentServer.express.adhoc.deadServer.app = express()
-  //   agentServer.express.adhoc.deadServer.app.use(bodyParser.json())
-  //   agentServer.express.adhoc.deadServer.app.use(bodyParser.urlencoded({ extended: true }))
-  //   agentServer.express.adhoc.deadServer.app.use(deadServerGalileo)
-  //   agentServer.express.adhoc.deadServer.appResponse = function (req, res, next) {
-  //     var responseStatus = req.params.status || 200
-  //     ee.emit('agentServer.express.adhoc.deadServer.app-response', {status: responseStatus, data: req.body})
-  //     res.sendStatus(responseStatus)
-  //   }
-  //   agentServer.express.adhoc.deadServer.app.get('/', agentServer.express.adhoc.deadServer.appResponse)
-  //   agentServer.express.adhoc.deadServer.app.post('/', agentServer.express.adhoc.deadServer.appResponse)
-  //   agentServer.express.adhoc.deadServer.app.get('/:status', agentServer.express.adhoc.deadServer.appResponse)
-  //   agentServer.express.adhoc.deadServer.app.post('/:status', agentServer.express.adhoc.deadServer.appResponse)
-  //   var deadServerExpressReady = function () {
-  //     var workingUrl = 'http://localhost:' + agentServer.express.adhoc.deadServer.appPort
-  //     debug(workingUrl)
-  //     request({
-  //       method: 'GET',
-  //       uri: workingUrl,
-  //       headers: {
-  //         'User-Agent': 'request',
-  //         'Content-Type': 'application/www-url-formencoded'
-  //       }
-  //     }, function (err, results) {
-  //       debug('deadServer was sent!', err)
-  //
-  //       // check fail log
-  //
-  //       ee.removeListener('agentServer.express.adhoc.deadServer.app-started', deadServerExpressReady)
-  //       ee.emit('deadServer-test-complete')
-  //     })
-  //   }
-  //   ee.on('agentServer.express.adhoc.deadServer.app-started', deadServerExpressReady)
-  //   ee.on('deadServer-test-complete', function () {
-  //     debug('closing noenv server')
-  //     agentServer.express.adhoc.deadServer.appListening.close()
-  //     agentServer.express.adhoc.deadServer = {}
-  //     t.end()
-  //   })
-  //   agentServer.express.adhoc.deadServer.appListening = agentServer.express.adhoc.deadServer.app.listen(function () {
-  //     agentServer.express.adhoc.deadServer.appPort = agentServer.express.adhoc.deadServer.appListening.address().port
-  //     ee.emit('agentServer.express.adhoc.deadServer.app-started')
-  //   })
-  // })
-
-  tap.test("should write request to disk if server doesn't respond within connection limit", function (t) {
-    var slowServerGalileo = new Galileo(serviceToken, {
+  tap.test('should write request to disk if server refuses connection', function (t) {
+    var deadServerGalileo = new Galileo(serviceToken, {
       logBody: true, // LOG_BODY agent spec
       failLog: './test/test-fail-logs', // FAIL_LOG agent spec
       failLogName: 'galileo-agent-errors.log', // FAIL_LOG agent spec
       limits: {
         bodySize: 1000, // bytes
         retry: 5, // RETRY_COUNT agent spec
-        retryTime: 1, // seconds, in between retries
+        retryTime: 1,
         flush: 5, // seconds, FLUSH_TIMEOUT agent spec
-        connection: 1 // seconds, CONNECTION_TIMEOUT agent spec
+        connection: 4 // seconds, CONNECTION_TIMEOUT agent spec
       },
       queue: { // QUEUE_SIZE agent spec
         batch: 1, // number in a batch, if >1 switches path; `single` to `batch`
@@ -486,31 +415,27 @@ ee.on('collector-started', function () {
       },
       collector: {
         host: 'localhost', // HOST agent spec
-        port: collectorPort, // PORT agent spec
+        port: collectorPort - 1, // PORT agent spec
         path: '/',
         ssl: false
       }
     })
-    agentServer.express.adhoc.slowServer = {}
-    agentServer.express.adhoc.slowServer.app = express()
-    agentServer.express.adhoc.slowServer.app.use(bodyParser.json())
-    agentServer.express.adhoc.slowServer.app.use(bodyParser.urlencoded({ extended: true }))
-    agentServer.express.adhoc.slowServer.app.use(slowServerGalileo)
-    agentServer.express.adhoc.slowServer.appResponse = function (req, res, next) {
+    agentServer.express.adhoc.deadServer = {}
+    agentServer.express.adhoc.deadServer.app = express()
+    agentServer.express.adhoc.deadServer.app.use(bodyParser.json())
+    agentServer.express.adhoc.deadServer.app.use(bodyParser.urlencoded({ extended: true }))
+    agentServer.express.adhoc.deadServer.app.use(deadServerGalileo)
+    agentServer.express.adhoc.deadServer.appResponse = function (req, res, next) {
       var responseStatus = req.params.status || 200
-      ee.emit('agentServer.express.adhoc.slowServer.app-response', {status: responseStatus, data: req.body})
+      ee.emit('agentServer.express.adhoc.deadServer.app-response', {status: responseStatus, data: req.body})
       res.sendStatus(responseStatus)
     }
-    agentServer.express.adhoc.slowServer.app.get('/', agentServer.express.adhoc.slowServer.appResponse)
-    agentServer.express.adhoc.slowServer.app.post('/', agentServer.express.adhoc.slowServer.appResponse)
-    agentServer.express.adhoc.slowServer.app.get('/:status', agentServer.express.adhoc.slowServer.appResponse)
-    agentServer.express.adhoc.slowServer.app.post('/:status', agentServer.express.adhoc.slowServer.appResponse)
-    var slowServerCollectorResponse = function (data) {
-      console.log('collector responded')
-    }
-    var slowServerExpressReady = function () {
-      ee.on('collector-response', slowServerCollectorResponse)
-      var workingUrl = 'http://localhost:' + agentServer.express.adhoc.slowServer.appPort
+    agentServer.express.adhoc.deadServer.app.get('/', agentServer.express.adhoc.deadServer.appResponse)
+    agentServer.express.adhoc.deadServer.app.post('/', agentServer.express.adhoc.deadServer.appResponse)
+    agentServer.express.adhoc.deadServer.app.get('/:status', agentServer.express.adhoc.deadServer.appResponse)
+    agentServer.express.adhoc.deadServer.app.post('/:status', agentServer.express.adhoc.deadServer.appResponse)
+    var deadServerExpressReady = function () {
+      var workingUrl = 'http://localhost:' + agentServer.express.adhoc.deadServer.appPort
       debug(workingUrl)
       request({
         method: 'GET',
@@ -520,24 +445,24 @@ ee.on('collector-started', function () {
           'Content-Type': 'application/www-url-formencoded'
         }
       }, function (err, results) {
-        debug('slowServer was sent!', err)
+        debug('deadServer was sent!', err)
 
         // check fail log
 
-        ee.removeListener('agentServer.express.adhoc.slowServer.app-started', slowServerExpressReady)
-        ee.emit('slowServer-test-complete')
+        ee.removeListener('agentServer.express.adhoc.deadServer.app-started', deadServerExpressReady)
+        ee.emit('deadServer-test-complete')
       })
     }
-    ee.on('agentServer.express.adhoc.slowServer.app-started', slowServerExpressReady)
-    ee.on('slowServer-test-complete', function () {
+    ee.on('agentServer.express.adhoc.deadServer.app-started', deadServerExpressReady)
+    ee.on('deadServer-test-complete', function () {
       debug('closing noenv server')
-      agentServer.express.adhoc.slowServer.appListening.close()
-      agentServer.express.adhoc.slowServer = {}
+      agentServer.express.adhoc.deadServer.appListening.close()
+      agentServer.express.adhoc.deadServer = {}
       t.end()
     })
-    agentServer.express.adhoc.slowServer.appListening = agentServer.express.adhoc.slowServer.app.listen(function () {
-      agentServer.express.adhoc.slowServer.appPort = agentServer.express.adhoc.slowServer.appListening.address().port
-      ee.emit('agentServer.express.adhoc.slowServer.app-started')
+    agentServer.express.adhoc.deadServer.appListening = agentServer.express.adhoc.deadServer.app.listen(function () {
+      agentServer.express.adhoc.deadServer.appPort = agentServer.express.adhoc.deadServer.appListening.address().port
+      ee.emit('agentServer.express.adhoc.deadServer.app-started')
     })
   })
 
@@ -561,245 +486,3 @@ ee.on('all-tests-complete', function () {
   agentServer.express.workingListening.close()
   agentServer.restify.workingListening.close()
 })
-// check and make sure the collector is sending proper alf
-
-// describe('Agent Middleware', function () {
-//   describe('Express', function () {
-//     it('sends a message with an Express server', function (done) {
-//       var setup = function (port) {
-//         debug('echo server started on port %s', port)
-//
-//         // create Express server
-//         var app = express()
-//
-//         // Attach agent
-//         app.use(agent(serviceToken, {
-//           queue: {
-//             entries: 1
-//           },
-//           collector: {
-//             host: 'localhost',
-//             port: port,
-//             ssl: false
-//           }
-//         }))
-//
-//         // Setup a route
-//         app.get('/', function (req, res) {
-//           res.send('Bonjour')
-//         })
-//
-//         // Start the server
-//         server(app, function (port) {
-//           debug('express server started on port %s', port)
-//
-//           // send a request
-//           unirest.get('http://localhost:' + port).end(function (results) {
-//             if (results.error) debug(results.error)
-//           })
-//         })
-//       }
-//
-//       // actual test
-//       echo(setup, function test (body) {
-//         body.should.be.an.Object
-//         body.should.have.property('serviceToken').and.equal(serviceToken)
-//
-//         done()
-//       })
-//     })
-//   })
-//
-//   it('sends a message with a standard HTTP server', function (done) {
-//     var setup = function (port) {
-//       debug('echo server started on port %s', port)
-//
-//       // create server
-//       var analytics = agent(serviceToken, {
-//         queue: {
-//           entries: 1
-//         },
-//         collector: {
-//           host: 'localhost',
-//           port: port,
-//           ssl: false
-//         }
-//       })
-//
-//       var app = function (req, res) {
-//         analytics(req, res)
-//
-//         res.writeHead(200, {'Content-Type': 'text/plain'})
-//         res.write('Bonjour')
-//         res.end()
-//       }
-//
-//       server(app, function (port) {
-//         debug('http server started on port %s', port)
-//
-//         // send a request
-//         unirest.get('http://localhost:' + port).end(function (results) {
-//           if (results.error) debug(results.error)
-//         })
-//       })
-//     }
-//
-//     // actual test
-//     echo(setup, function test (body) {
-//       body.should.be.an.Object
-//       body.should.have.property('serviceToken').and.equal(serviceToken)
-//
-//       done()
-//     })
-//   })
-//
-//   it('sends a batched message', function (done) {
-//     var setup = function (port) {
-//       debug('echo server started on port %s', port)
-//
-//       // create server
-//       var analytics = agent(serviceToken, {
-//         queue: {
-//           entries: 10
-//         },
-//         collector: {
-//           host: 'localhost',
-//           port: port,
-//           ssl: false
-//         }
-//       })
-//
-//       var app = function (req, res) {
-//         analytics(req, res)
-//
-//         res.writeHead(200, {'Content-Type': 'text/plain'})
-//         res.write('Bonjour')
-//         res.end()
-//       }
-//
-//       server(app, function (port) {
-//         debug('http server started on port %s', port)
-//
-//         // call the route x times
-//         var i = 10
-//
-//         while (i--) {
-//           unirest.get('http://localhost:' + port).end(function (results) {
-//             if (results.error) debug(results.error)
-//           })
-//         }
-//       })
-//     }
-//
-//     echo(setup, function test (body) {
-//       body.should.be.an.Object
-//       body.har.log.should.have.property('entries').lengthOf(10)
-//
-//       done()
-//     })
-//   })
-//
-//   it('should convert http server req, res to ALF', function (done) {
-//     var setup = function (port) {
-//       debug('collector echo server started on port %s', port)
-//
-//       // create server
-//       var analytics = agent(serviceToken, {
-//         logBody: true,
-//         queue: {
-//           entries: 1
-//         },
-//         limits: {
-//           bodySize: 1e10
-//         },
-//         collector: {
-//           host: 'localhost',
-//           port: port,
-//           ssl: false
-//         }
-//       })
-//
-//       var app = function (req, res) {
-//         analytics(req, res)
-//         debug('agent server is responding')
-//         res.writeHead(200, {'Content-Type': 'text/plain'})
-//         res.write('Bonjour')
-//         res.end()
-//       }
-//
-//       server(app, function (port) {
-//         debug('agent http server started on port %s', port)
-//
-//         // send a request
-//         unirest.post('http://localhost:' + port)
-//           .query('foo=bar')
-//           .type('json')
-//           .send({foo: 'bar'})
-//           .header('host', 'localhost')
-//           .header('X-Custom-Header', 'foo')
-//           .end(function (results) {
-//             if (results.error) debug(results.error)
-//           })
-//       })
-//     }
-//
-//     // actual test
-//     echo(setup, function test (body) {
-//       debug('actual alf test starting')
-//
-//       alfValidator(body, '1.1.0').then(function () {
-//         debug('valid alf. Running specific content tests')
-//
-//         var har = body.har.log
-//
-//         har.should.be.an.Object
-//
-//         har.should.have.property('creator').and.be.an.Object
-//         har.creator.should.have.property('name').and.equal('galileo-agent-node')
-//         har.creator.should.have.property('version').and.equal(pkg.version)
-//
-//         har.should.have.property('entries').and.be.an.Array().with.lengthOf(1)
-//
-//         har.entries[0].should.have.property('serverIPAddress').and.be.a.String
-//         har.entries[0].should.have.property('startedDateTime').and.be.a.String
-//
-//         har.entries[0].should.have.property('request').and.be.an.Object
-//         har.entries[0].request.should.have.property('method').and.equal('POST')
-//         har.entries[0].request.should.have.property('url').and.equal('http://localhost/?foo=bar')
-//         har.entries[0].request.should.have.property('httpVersion').and.equal('HTTP/1.1')
-//         har.entries[0].request.should.have.property('queryString').and.be.an.Array().and.containEql({name: 'foo', value: 'bar'})
-//         har.entries[0].request.should.have.property('headersSize').and.be.a.Number().and.equal(163)
-//         har.entries[0].request.should.have.property('bodySize').and.be.a.Number().and.equal(13)
-//         har.entries[0].request.should.have.property('headers').and.be.an.Array().and.containEql({name: 'x-custom-header', value: 'foo'})
-//
-//         har.entries[0].request.should.have.property('postData').and.be.an.Object
-//
-//         // TODO fix request body capture
-//         // har.entries[0].request.postData.should.have.property('text').and.equal('{"foo":"bar"}')
-//
-//         har.entries[0].should.have.property('response').and.be.an.Object
-//         har.entries[0].response.should.have.property('status').and.equal(200)
-//         har.entries[0].response.should.have.property('statusText').and.equal('OK')
-//         har.entries[0].response.should.have.property('httpVersion').and.equal('HTTP/1.1')
-//         har.entries[0].response.should.have.property('headersSize').and.equal(129)
-//
-//         // TODO fix response bodySize capture
-//         // har.entries[0].response.should.have.property('bodySize').and.be.a.Number.and.equal(7)
-//
-//         har.entries[0].response.should.have.property('headers').and.be.an.Array().and.containEql({name: 'Content-Type', value: 'text/plain'})
-//
-//         har.entries[0].response.should.have.property('content').and.be.an.Object
-//         har.entries[0].response.content.should.have.property('text').and.equal('Qm9uam91cg==') // Base64 of 'Bonjour'
-//
-//         har.entries[0].should.have.property('timings').and.be.an.Object
-//         debug('finished content tests')
-//         done()
-//       }).catch(function (err) {
-//         debug('The alf submitted is not valid.', err.toString())
-//
-//         err.message = 'ALF Validator Error: ' + JSON.stringify(err, null, ' ')
-//         done(err)
-//       })
-//     })
-//   })
-// })
