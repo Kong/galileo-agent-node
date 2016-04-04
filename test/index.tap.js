@@ -7,6 +7,8 @@ var express = require('express')
 var bodyParser = require('body-parser')
 var restify = require('restify')
 var http = require('http')
+var zlib = require('zlib')
+var fs = require('fs')
 var alfValidator = require('alf-validator')
 var EventEmitter = require('events')
 var util = require('util')
@@ -59,6 +61,10 @@ var agentServer = {
     workingPort: 0,
     workingResponse: function () {},
     workingListening: function () {},
+    gzip: null,
+    gzipPort: 0,
+    gzipResponse: function () {},
+    gzipListening: function () {},
     adhoc: {}
   },
   restify: {
@@ -120,19 +126,33 @@ ee.on('collector-started', function () {
     req.on('end', function () {
       ee.emit('agentServer.http.working-response', {status: responseStatus, data: chunks})
     })
-    var headers = {'Content-Type': 'text/plain'}
+    var headers = {'Content-Type': 'application/json'}
     if (trigger === 'content-length-zero') {
       headers['Content-Length'] = 0
     }
-    res.writeHead(responseStatus, headers)
-    res.end('Hello World!')
+    var raw = fs.createReadStream(__dirname + '/fixture-response.json')
+    var acceptEncoding = req.headers['accept-encoding']
+    if (!acceptEncoding) {
+      acceptEncoding = ''
+    }
+    // Note: this is not a conformant accept-encoding parser.
+    // See http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.3
+    if (acceptEncoding.match(/\bgzip\b/)) {
+      headers['content-encoding'] = 'gzip'
+      res.writeHead(200, headers)
+      raw.pipe(zlib.createGzip()).pipe(res)
+    } else {
+      res.writeHead(200, {})
+      raw.pipe(res)
+    }
   }
   agentServer.http.working = http.createServer(agentServer.http.workingResponse)
+  agentServer.http.workingReady = false
   agentServer.http.workingListening = agentServer.http.working.listen(0, function () {
     agentServer.http.workingPort = agentServer.http.workingListening.address().port
+    agentServer.http.workingReady = true
     ee.emit('agentServer.http.working-started')
   })
-  agentServer.http.workingReady = false
 
   // set up mock agent - express - working
   agentServer.express.working = express()
@@ -160,20 +180,21 @@ ee.on('collector-started', function () {
     }
     if (trigger === 'delay') {
       return setTimeout(function () {
-        res.sendStatus(responseStatus)
+        res.status(responseStatus).send({'data': 'Hello World!'})
       }, 2000)
     }
-    res.sendStatus(responseStatus)
+    res.status(responseStatus).send({'data': 'Hello World!'})
   }
   agentServer.express.working.get('/', agentServer.express.workingResponse)
   agentServer.express.working.post('/', agentServer.express.workingResponse)
   agentServer.express.working.get('/:status', agentServer.express.workingResponse)
   agentServer.express.working.post('/:status', agentServer.express.workingResponse)
+  agentServer.express.workingReady = false
   agentServer.express.workingListening = agentServer.express.working.listen(function () {
     agentServer.express.workingPort = agentServer.express.workingListening.address().port
+    agentServer.express.workingReady = true
     ee.emit('agentServer.express.working-started')
   })
-  agentServer.express.workingReady = false
 
   // set up mock agent - restify - working
   agentServer.restify.working = restify.createServer()
@@ -187,47 +208,47 @@ ee.on('collector-started', function () {
   agentServer.restify.working.post('/', agentServer.restify.workingResponse)
   agentServer.restify.working.get('/:status', agentServer.restify.workingResponse)
   agentServer.restify.working.post('/:status', agentServer.restify.workingResponse)
+  agentServer.restify.workingReady = false
   agentServer.restify.workingListening = agentServer.restify.working.listen(function () {
     agentServer.restify.workingPort = agentServer.restify.workingListening.address().port
+    agentServer.restify.workingReady = true
     ee.emit('agentServer.restify.working-started')
   })
-  agentServer.restify.workingReady = false
 
   ee.on('agentServer.http.working-response', function (data) {
     debug('agentServer.http.working-response', data)
   })
   ee.on('agentServer.http.working-started', function () {
     debug('agentServer.http.working-started', agentServer.http.workingPort)
-
-    agentServer.http.workingReady = true
   })
   ee.on('agentServer.express.working-response', function (data) {
     debug('agentServer.express.working-response', data)
   })
   ee.on('agentServer.express.working-started', function () {
     debug('agentServer.express.working-started', agentServer.express.workingPort)
-    agentServer.express.workingReady = true
   })
   ee.on('agentServer.restify.working-response', function (data) {
     debug('agentServer.restify.working-response', data)
   })
   ee.on('agentServer.restify.working-started', function () {
     debug('agentServer.restify.working-started', agentServer.restify.workingPort)
-    agentServer.restify.workingReady = true
   })
-  debug('doneskies')
+
   // tests - call and get responses (set up adhoc servers for fail tests)
 
   tap.test('should send valid alf record', function (t) {
     var thisCollectorResponse = function (data) {
       alfValidator(data.data, '1.1.0').then(function (results) {
-        debug('got results')
+        // 'Zm9vPWJhcg==' === base64('foo=bar')
+        t.ok(data.data.har.log.entries[0].request.postData.text === 'Zm9vPWJhcg==', 'should base64 encode request postData')
+        // 'eyJkYXRhIjoiSGVsbG8gV29ybGQhIn0='=== base64('{"data":"Hello World!"}')
+        t.ok(data.data.har.log.entries[0].response.content.text === 'eyJkYXRhIjoiSGVsbG8gV29ybGQhIn0=', 'should base64 encode response content')
         ee.removeListener('collector-response', thisCollectorResponse)
         ee.removeListener('agentServer.express.working-started', thisExpressReady)
         t.pass('ALF data is valid.')
         t.end()
       }).catch(function (err) {
-        debug('got error')
+        debug('got error', err)
         ee.removeListener('collector-response', thisCollectorResponse)
         ee.removeListener('agentServer.express.working-started', thisExpressReady)
         t.fail(err)
@@ -255,6 +276,51 @@ ee.on('collector-started', function () {
       ee.on('agentServer.express.working-started', thisExpressReady)
     } else {
       thisExpressReady()
+    }
+  })
+  tap.test('should handle gzipped bodies', function (t) {
+    var gzipCollectorResponse = function (data) {
+      alfValidator(data.data, '1.1.0').then(function (results) {
+        debug('got results')
+        debug(data.data.har.log.entries[0].response.content)
+        // 'Zm9vPWJhcg==' === base64('foo=bar')
+        t.ok(data.data.har.log.entries[0].request.postData.text === 'Zm9vPWJhcg==', 'should base64 encode request postData')
+        // 'eyJkYXRhIjogIkhlbGxvIFdvcmxkISJ9Cg=='=== base64('{"data": "Hello World!"}')
+        t.ok(data.data.har.log.entries[0].response.content.text === 'eyJkYXRhIjogIkhlbGxvIFdvcmxkISJ9Cg==', 'should degzip and base64 encode response content')
+        ee.removeListener('collector-response', gzipCollectorResponse)
+        ee.removeListener('agentServer.http.working-started', gzipHttpReady)
+        t.pass('ALF data is valid.')
+        t.end()
+      }).catch(function (err) {
+        debug('got error', err)
+        ee.removeListener('collector-response', gzipCollectorResponse)
+        ee.removeListener('agentServer.http.working-started', gzipHttpReady)
+        t.fail(err)
+        t.end()
+      })
+    }
+    var gzipHttpReady = function () {
+      ee.on('collector-response', gzipCollectorResponse)
+      var gzipUrl = 'http://localhost:' + agentServer.http.workingPort
+      debug(gzipUrl)
+      // unirest.get(gzipUrl)
+      request({
+        method: 'POST',
+        uri: gzipUrl,
+        headers: {
+          'User-Agent': 'request',
+          'Content-Type': 'application/www-url-formencoded'
+        },
+        body: 'foo=bar',
+        gzip: true
+      }, function (err, results) {
+        debug('gzip was sent!', err)
+      })
+    }
+    if (!agentServer.http.workingReady) {
+      ee.on('agentServer.http.working-started', gzipHttpReady)
+    } else {
+      gzipHttpReady()
     }
   })
   tap.test('should allow setting no environment', function (t) {
@@ -303,7 +369,7 @@ ee.on('collector-started', function () {
         t.pass('ALF data is valid.')
         ee.emit('noEnv-test-complete')
       }).catch(function (err) {
-        debug('got error')
+        debug('got error', err)
         ee.removeListener('collector-response', noEnvCollectorResponse)
         ee.removeListener('agentServer.express.adhoc.noEnv.app-started', noEnvExpressReady)
         t.fail(err)
@@ -450,12 +516,14 @@ ee.on('collector-started', function () {
         // check fail log
 
         ee.removeListener('agentServer.express.adhoc.deadServer.app-started', deadServerExpressReady)
-        ee.emit('deadServer-test-complete')
+        setTimeout(function () {
+          ee.emit('deadServer-test-complete')
+        }, 6000)
       })
     }
     ee.on('agentServer.express.adhoc.deadServer.app-started', deadServerExpressReady)
     ee.on('deadServer-test-complete', function () {
-      debug('closing noenv server')
+      debug('closing dead server')
       agentServer.express.adhoc.deadServer.appListening.close()
       agentServer.express.adhoc.deadServer = {}
       t.end()
@@ -480,9 +548,9 @@ ee.on('collector-started', function () {
   })
 })
 ee.on('all-tests-complete', function () {
-  debug('closing servers')
   listeningCollector.close()
   agentServer.http.workingListening.close()
   agentServer.express.workingListening.close()
   agentServer.restify.workingListening.close()
+  process.exit()
 })
