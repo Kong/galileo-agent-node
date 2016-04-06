@@ -3,6 +3,6 @@
 coverage
 node_modules
 !.env.example
-tester.js
+*.ignore.*
 .nyc_output
 .DS_Store
