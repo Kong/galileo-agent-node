@@ -3,15 +3,6 @@
   "name": "galileo-agent",
   "description": "Node Agent for Galileo (https://getgalileo.io)",
   "author": "Mashape Inc. <opensource@mashape.com> (https://www.mashape.com/)",
-  "contributors": [
-    "Ahmad Nassri <ahmad@ahmadnassri.com> [@ahmadnassri] (https://www.ahmadnassri.com)",
-    "Kenneth Lee <kennethkl@gmail.com> [@kennethklee] (http://konquest.com)",
-    "Simon Grondin <github@simongrondin.name> [@SGrondin] (http://simongrondin.name)",
-    "Nijiko Yonskai <nijikokun@gmail.com> [@nijikokun] (http://nijikokun.com)",
-    "Thibault Charbonnier [@thibaultCha] (https://1991.io)",
-    "Montana Flynn <montana@montanaflynn.me> [@montanaflynn] (http://anonfunction.com)",
-    "Trent Oswald <trentoswald@therebelrobot.com> [@therebelrobot] (http://therebelrobot.com)"
-  ],
   "homepage": "https://getgalileo.io",
   "repository": "Mashape/galileo-agent-node",
   "license": "MIT",
