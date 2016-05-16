@@ -2,8 +2,8 @@
 
 var http = require('http')
 
-var analytics = require('mashape-analytics')
-var agent = analytics('SERVICE_TOKEN')
+var galileo = require('galileo-agent')
+var agent = galileo('SERVICE_TOKEN')
 
 var server = http.createServer(function (req, res) {
   agent(req, res)

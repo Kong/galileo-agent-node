@@ -1,0 +1,64 @@
+{
+  "lo0": [
+    {
+      "address": "::1",
+      "netmask": "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff",
+      "family": "IPv6",
+      "mac": "00:00:00:00:00:00",
+      "scopeid": 0,
+      "internal": true
+    },
+    {
+      "address": "127.0.0.1",
+      "netmask": "255.0.0.0",
+      "family": "IPv4",
+      "mac": "00:00:00:00:00:00",
+      "internal": true
+    },
+    {
+      "address": "fe80::1",
+      "netmask": "ffff:ffff:ffff:ffff::",
+      "family": "IPv6",
+      "mac": "00:00:00:00:00:00",
+      "scopeid": 1,
+      "internal": true
+    }
+  ],
+  "en0": [
+    {
+      "address": "192.168.1.113",
+      "netmask": "255.255.255.0",
+      "family": "IPv4",
+      "mac": "60:f8:1d:c5:93:cc",
+      "internal": false
+    }
+  ],
+  "awdl0": [
+    {
+      "address": "fe80::44bc:1aff:fe4d:7403",
+      "netmask": "ffff:ffff:ffff:ffff::",
+      "family": "IPv6",
+      "mac": "46:bc:1a:4d:74:03",
+      "scopeid": 8,
+      "internal": false
+    }
+  ],
+  "vboxnet0": [
+    {
+      "address": "192.168.99.1",
+      "netmask": "255.255.255.0",
+      "family": "IPv4",
+      "mac": "0a:00:27:00:00:00",
+      "internal": false
+    }
+  ],
+  "tun0": [
+    {
+      "address": "10.3.22.176",
+      "netmask": "255.255.255.0",
+      "family": "IPv4",
+      "mac": "00:00:00:00:00:00",
+      "internal": false
+    }
+  ]
+}

@@ -1,11 +1,11 @@
 'use strict'
 
 var restify = require('restify')
-var analytics = require('mashape-analytics')
+var galileo = require('galileo-agent')
 
 var server = restify.createServer()
 
-server.use(analytics('SERVICE_TOKEN'))
+server.use(galileo('SERVICE_TOKEN'))
 
 server.get('/api', function (req, res, next) {
   res.send('Hello World!')

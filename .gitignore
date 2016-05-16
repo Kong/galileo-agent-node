@@ -3,3 +3,6 @@
 coverage
 node_modules
 !.env.example
+*.ignore.*
+.nyc_output
+.DS_Store

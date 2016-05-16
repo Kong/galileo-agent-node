@@ -1,10 +1,10 @@
 {
-  "version": "1.1.5",
-  "name": "mashape-analytics",
-  "description": "Node Agent for Mashape Analytics (https://analytics.mashape.com)",
+  "version": "2.0.0",
+  "name": "galileo-agent",
+  "description": "Node Agent for Galileo (https://getgalileo.io)",
   "author": "Mashape Inc. <opensource@mashape.com> (https://www.mashape.com/)",
-  "homepage": "https://analytics.mashape.com",
-  "repository": "Mashape/analytics-agent-node",
+  "homepage": "https://getgalileo.io",
+  "repository": "Mashape/galileo-agent-node",
   "license": "MIT",
   "main": "lib/index",
   "keywords": [
@@ -14,7 +14,8 @@
     "har",
     "http",
     "https",
-    "mashape"
+    "mashape",
+    "galileo"
   ],
   "engines": {
     "node": ">=0.10"
@@ -25,31 +26,35 @@
     "README.md"
   ],
   "bugs": {
-    "url": "https://github.com/Mashape/analytics-agent-node/issues"
+    "url": "https://github.com/Mashape/galileo-agent-node/issues"
   },
   "scripts": {
     "pretest": "standard && echint",
-    "test": "mocha",
-    "posttest": "npm run coverage",
-    "coverage": "istanbul cover --dir coverage _mocha -- -R dot",
+    "test": "tap test/*.tap.js",
+    "coverage": "tap test/*.tap.js --cov --coverage-report=html",
     "codeclimate": "codeclimate < coverage/lcov.info"
   },
   "devDependencies": {
+    "alf-validator": "^3.1.2",
+    "body-parser": "^1.15.0",
     "codeclimate-test-reporter": "*",
     "echint": "^1.3.0",
-    "express": "^4.13.0",
-    "istanbul": "^0.3.15",
-    "mocha": "^2.2.5",
+    "express": "^4.13.4",
+    "istanbul": "^0.4.2",
+    "lodash": "^4.6.1",
+    "request": "^2.69.0",
+    "restify": "^4.0.4",
     "should": "^7.0.1",
-    "standard": "^4.3.1"
+    "standard": "^4.3.1",
+    "tap": "^5.7.0"
   },
   "dependencies": {
     "async": "^1.2.1",
-    "chalk": "^1.0.0",
     "debug-log": "^1.0.0",
     "dotenv": "^1.2.0",
     "stringify-clone": "^1.1.0",
     "unirest": "^0.4.2",
+    "uuid": "^2.0.1",
     "xtend": "^4.0.0"
   }
 }
