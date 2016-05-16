@@ -60,15 +60,15 @@ galileo('SERVICE_TOKEN', 'PRODUCTION', {
 
 ### Options
 
-| Name                 | Description                                                                | Default |
-| -------------------- | -------------------------------------------------------------------------- | ------- |
-| `logBody`            | send body of request/response with ALF record                              | `false` |
-| `queue.entries`      | num of entries per [ALF](https://github.com/Mashape/api-log-format) object | `100`   |
-| `limits.bodysize`    | limit captured *request & response* body size in bytes                     | `1000`  |
-| `collector.host`     | specify the collector hostname to which you send your data                 | `'collector.galileo.mashape.com'`     |
-| `collector.port`     | specify the port of the collector server                                   | `443`     |
-| `collector.path`     | specify the versioning path of the collector server                        | `'/1.1.0/single'`     |
-| `collector.ssl`      | specify if the collector server has ssl enabled                            | `true`     |
+| Name                 | Description                                                                      | Default |
+| -------------------- | -------------------------------------------------------------------------------- | ------- |
+| `logBody`            | send body of request/response with ALF record                                    | `false` |
+| `queue.entries`      | num of entries per [ALF](https://github.com/Mashape/api-log-format) object       | `100`   |
+| `limits.bodysize`    | limit captured *request & response* body size in bytes                           | `1000`  |
+| `collector.host`     | specify the collector hostname to which you send your data                       | `'collector.galileo.mashape.com'` |
+| `collector.port`     | specify the port of the collector server (Galileo cloud requires SSL port: `443` | `443`   |
+| `collector.path`     | specify the versioning path of the collector server                              | `'/1.1.0/single'` |
+| `collector.ssl`      | specify if the collector server has ssl enabled (Galileo cloud requires `true`   | `true`  |
 
 ## Examples
 
